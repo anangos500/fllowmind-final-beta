@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Task, TaskStatus, Recurrence } from '../types';
 import SparklesIcon from './icons/SparklesIcon';
@@ -6,35 +7,27 @@ import LoaderIcon from './icons/LoaderIcon';
 import ConfirmationModal from './ConfirmationModal';
 import AiConflictResolutionModal from './AiConflictResolutionModal';
 
-// FIX: Add TypeScript definitions for the Web Speech API to resolve compilation errors.
-// These interfaces describe the properties and methods used for voice command recognition,
-// as they are not standard in all TypeScript DOM libraries.
 interface SpeechRecognitionEvent extends Event {
   readonly resultIndex: number;
   readonly results: SpeechRecognitionResultList;
 }
-
 interface SpeechRecognitionResultList {
   readonly length: number;
   item(index: number): SpeechRecognitionResult;
   [index: number]: SpeechRecognitionResult;
 }
-
 interface SpeechRecognitionResult {
   readonly isFinal: boolean;
   readonly length: number;
   item(index: number): SpeechRecognitionAlternative;
   [index: number]: SpeechRecognitionAlternative;
 }
-
 interface SpeechRecognitionAlternative {
   readonly transcript: string;
 }
-
 interface SpeechRecognitionErrorEvent extends Event {
   readonly error: string;
 }
-
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
@@ -45,7 +38,6 @@ interface SpeechRecognition extends EventTarget {
   onerror: (event: SpeechRecognitionErrorEvent) => void;
   onend: () => void;
 }
-
 declare global {
   interface Window {
     SpeechRecognition: new () => SpeechRecognition;
@@ -114,24 +106,34 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
   const [suggestedSlots, setSuggestedSlots] = useState<{ startTime: string; endTime: string }[]>([]);
   const [isConflictModalOpen, setConflictModalOpen] = useState(false);
 
-  // State for voice commands
   const [isListening, setIsListening] = useState(false);
-  const [speechError, setSpeechError] = useState<string | null>(null);
+  // FIX: Broaden the micPermission state type to include 'prompt', which is a valid
+  // value from the Permissions API. This resolves all TypeScript errors in this file.
+  const [micPermission, setMicPermission] = useState<'default' | 'granted' | 'denied' | 'prompt'>('default');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const autoSubmitTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const checkPermission = async () => {
+      if (!navigator.permissions) return;
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        setMicPermission(permissionStatus.state);
+        permissionStatus.onchange = () => setMicPermission(permissionStatus.state);
+      } catch (err) {
+        console.error("Tidak dapat menanyakan izin mikrofon:", err);
+      }
+    };
+    checkPermission();
+  }, []);
 
   const handleAiRequest = useCallback(async (command?: string) => {
     const textToSubmit = command || inputValue;
     if (!textToSubmit.trim()) return;
-
     setIsAiLoading(true);
     setShowRetryModal(false);
     if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
-    
-    // Stop listening if it was active
-    if (isListening) {
-        setIsListening(false);
-    }
+    if (isListening) setIsListening(false);
 
     try {
       const currentDate = new Date().toISOString();
@@ -193,66 +195,44 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSpeechError("Speech recognition not supported in this browser.");
-      return;
-    }
+    if (!SpeechRecognition) return;
     if (!recognitionRef.current) {
       const recognition: SpeechRecognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'id-ID';
-
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
         }
-
         if (finalTranscript) {
           setInputValue(prev => (prev + ' ' + finalTranscript.trim()).trim());
           if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
-          autoSubmitTimerRef.current = window.setTimeout(() => {
-            setInputValue(currentVal => {
-              if (currentVal.trim()) {
-                handleAiRequest(currentVal.trim());
-              }
-              return currentVal;
-            });
-          }, 3000);
+          autoSubmitTimerRef.current = window.setTimeout(() => setInputValue(currentVal => {
+            if (currentVal.trim()) handleAiRequest(currentVal.trim());
+            return currentVal;
+          }), 3000);
         }
       };
-
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          setSpeechError(`Speech recognition error: ${event.error}`);
-          setIsListening(false);
-        }
+        if (event.error !== 'no-speech' && event.error !== 'aborted') setIsListening(false);
       };
-
-      recognition.onend = () => {
-        if (isListening) {
-          setIsListening(false);
-        }
-      };
+      recognition.onend = () => setIsListening(false);
       recognitionRef.current = recognition;
     }
-
     return () => {
       recognitionRef.current?.stop();
       if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
     };
-  }, [handleAiRequest, isListening]);
-  
+  }, [handleAiRequest]);
+
   useEffect(() => {
     if (isListening) {
       try {
         setInputValue('');
         recognitionRef.current?.start();
       } catch (e) {
-        console.warn("Could not start recognition:", e);
         setIsListening(false);
       }
     } else {
@@ -260,18 +240,18 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
     }
   }, [isListening]);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (isListening) {
       setIsListening(false);
-    } else {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => {
-          setIsListening(true);
-          setSpeechError(null);
-        })
-        .catch(() => {
-          setSpeechError("Microphone permission denied.");
-        });
+    } else if (micPermission === 'granted') {
+      setIsListening(true);
+    } else if (micPermission === 'prompt') {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Status akan diperbarui oleh event 'onchange', lalu kita bisa mencoba lagi
+      } catch (err) {
+        // Izin ditolak, status akan menjadi 'denied'
+      }
     }
   };
 
@@ -280,17 +260,8 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
   const handleManualAdd = () => { if (conflictingTask) onOpenManualAdd({ title: conflictingTask.title, startTime: conflictingTask.startTime, endTime: conflictingTask.endTime, status: TaskStatus.ToDo, checklist: [], notes: '', isImportant: false, recurrence: Recurrence.None }); setConflictModalOpen(false); setConflictingTask(null); setSuggestedSlots([]); setInputValue(''); };
 
   let micButtonClass = 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400';
-  if (isListening) {
-    micButtonClass = 'text-red-500 animate-pulse';
-  }
-
-  const placeholderText = isListening ? 'Mendengarkan perintah Anda...' : 'Coba: Rapat besok jam 3 dan kirim laporan jam 5';
-  
-  const helperText = isAiLoading 
-    ? 'AI Sedang membuat jadwal Anda...' 
-    : isListening 
-      ? 'Ucapkan perintah Anda, AI akan mengirim otomatis.' 
-      : 'Tekan Enter atau aktifkan mic untuk membuat tugas.';
+  if (isListening) micButtonClass = 'text-red-500 animate-pulse';
+  if (micPermission === 'denied') micButtonClass = 'text-slate-400 dark:text-slate-600 cursor-not-allowed';
 
   return (
     <div className="mb-8" data-tour-id="smart-add-task">
@@ -298,22 +269,28 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
         <div className="relative">
           <SparklesIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" />
           <input
-            type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={isAiLoading}
-            placeholder={placeholderText}
+            type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isAiLoading}
+            placeholder={isListening ? 'Mendengarkan perintah Anda...' : 'Coba: Rapat besok jam 3 dan kirim laporan jam 5'}
             className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-200 shadow-sm"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
             {isAiLoading ? <LoaderIcon className="w-5 h-5 text-slate-400" /> : (
-              <button type="button" onClick={toggleListening} className={`p-1 rounded-full transition-colors ${micButtonClass}`} aria-label="Gunakan perintah suara">
+              <button
+                type="button"
+                onClick={toggleListening}
+                disabled={micPermission === 'denied'}
+                title={micPermission === 'denied' ? 'Izin mikrofon diblokir di pengaturan browser Anda' : 'Gunakan perintah suara'}
+                className={`p-1 rounded-full transition-colors ${micButtonClass}`}
+                aria-label="Gunakan perintah suara"
+              >
                 <MicIcon className="w-6 h-6" />
               </button>
             )}
           </div>
         </div>
       </form>
-      {speechError && <p className="text-xs text-red-500 text-center mt-2">{speechError}</p>}
       <p className="text-xs text-slate-500 dark:text-slate-300 text-center mt-2">
-        {helperText}
+        {isAiLoading ? 'AI Sedang membuat jadwal Anda...' : isListening ? 'Ucapkan perintah Anda, AI akan mengirim otomatis.' : 'Tekan Enter atau aktifkan mic untuk membuat tugas.'}
       </p>
       {showRetryModal && <ConfirmationModal title="Terjadi Kegagalan" message="AI gagal memproses permintaan Anda. Apakah Anda ingin mencoba lagi?" confirmText="Coba Lagi" onConfirm={() => handleAiRequest()} onCancel={() => setShowRetryModal(false)} isDestructive={false} />}
       {isConflictModalOpen && conflictingTask && <AiConflictResolutionModal taskTitle={conflictingTask.title} suggestedSlots={suggestedSlots} onClose={() => { setConflictModalOpen(false); setConflictingTask(null); }} onSelectSlot={handleSlotSelection} onManualAdd={handleManualAdd} />}

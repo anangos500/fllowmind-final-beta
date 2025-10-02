@@ -77,7 +77,7 @@ const PermissionWizard: React.FC<PermissionWizardProps> = ({
 
   return (
     <div className={`fixed inset-0 bg-black flex justify-center items-center z-[100] p-4 transition-opacity duration-300 ${visible ? 'bg-opacity-50' : 'bg-opacity-0'}`}>
-      <div className={`bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md transition-all duration-300 ease-out ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+      <div className={`bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md transition-all duration-300 ease-out overflow-hidden ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
         <header className="p-6 text-center border-b dark:border-slate-700">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Aktifkan Fitur Cerdas</h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Dapatkan pengalaman terbaik dari Flowmind.</p>

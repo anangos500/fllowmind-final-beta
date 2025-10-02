@@ -28,16 +28,10 @@ export const useNotifications = (tasks: Task[]) => {
       return;
     }
 
+    // Menggunakan .then() untuk potensi kompatibilitas yang lebih baik pada perangkat seluler,
+    // menghindari potensi masalah dengan konteks async/await setelah interaksi pengguna.
     Notification.requestPermission().then(result => {
-        // FIX: Introduce a small delay before updating the permission state.
-        // This helps prevent potential race conditions or state-loss issues on
-        // some mobile browsers (especially Android), which can become unstable 
-        // immediately after a permission prompt is dismissed. A short timeout
-        // allows the browser to stabilize before React triggers a re-render,
-        // resolving an issue where Focus Mode would appear blank.
-        setTimeout(() => {
-            setPermission(result);
-        }, 100);
+        setPermission(result);
     });
   }, []);
 

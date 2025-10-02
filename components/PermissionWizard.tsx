@@ -44,25 +44,24 @@ const PermissionWizard: React.FC<PermissionWizardProps> = ({
 
   }, [notifStatus]);
 
-  const handleClose = (skipped: boolean) => {
-    setVisible(false);
-    setTimeout(() => onClose(skipped), 300);
-  };
-
   const handleRequestNotifications = () => {
-    // Segera tutup wizard untuk mengalihkan fokus ke prompt asli browser.
-    // Ini menciptakan nuansa aksi tunggal yang lebih lancar bagi pengguna.
-    handleClose(false);
-    // Sekarang, picu permintaan izin browser.
     onRequestNotificationPermission();
   };
   
   const handleRequestMic = async () => {
-    // Tutup wizard terlebih dahulu untuk alasan UX yang sama.
-    handleClose(false);
     await onRequestMicPermission();
-    // Tidak perlu memeriksa ulang status di sini, karena komponen akan di-unmount.
-    // Status akan dievaluasi ulang jika wizard dibuka lagi.
+    // Re-check status after request
+    try {
+        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        setMicStatus(result.state);
+    } catch (e) {
+        console.warn("Could not re-check microphone permission", e);
+    }
+  };
+  
+  const handleClose = (skipped: boolean) => {
+    setVisible(false);
+    setTimeout(() => onClose(skipped), 300);
   };
   
   const allPermissionsSet = notifStatus !== 'default' && micStatus !== 'prompt';

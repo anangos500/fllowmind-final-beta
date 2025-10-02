@@ -1,4 +1,9 @@
 
+
+
+
+
+
 import React from 'react';
 import CalendarIcon from './icons/CalendarIcon';
 import SunIcon from './icons/SunIcon';
@@ -16,17 +21,13 @@ import TiktokIcon from './icons/TiktokIcon';
 import InstagramIcon from './icons/InstagramIcon';
 import ThreadsIcon from './icons/ThreadsIcon';
 import SettingsIcon from './icons/SettingsIcon';
-import MicIcon from './icons/MicIcon';
 
 
 interface SidebarProps {
   currentView: View;
   onViewChange: (view: View) => void;
-  // FIX: Update notification permission type to align with modern PermissionState.
-  notificationPermission: 'granted' | 'denied' | 'prompt';
+  notificationPermission: 'default' | 'granted' | 'denied';
   requestNotificationPermission: () => void;
-  micPermission: 'default' | 'granted' | 'denied' | 'prompt';
-  requestMicPermission: () => void;
   onLogoutRequest: () => void;
   isOpen: boolean;
   onClose: () => void;
@@ -51,7 +52,7 @@ const NavItem: React.FC<{
   </button>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificationPermission, requestNotificationPermission, micPermission, requestMicPermission, onLogoutRequest, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificationPermission, requestNotificationPermission, onLogoutRequest, isOpen, onClose }) => {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
 
@@ -100,43 +101,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
                             </p>
                         </div>
                     )}
-                    {/* FIX: Tampilkan tombol untuk meminta izin notifikasi jika statusnya 'prompt'. */}
-                    {notificationPermission === 'prompt' && (
+                    {notificationPermission !== 'granted' && (
                         <button 
                             onClick={requestNotificationPermission}
-                            className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-lg text-slate-600 dark:text-amber-200 bg-amber-100 dark:bg-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-800/80 transition-colors"
+                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-500 dark:text-amber-200 bg-amber-100 dark:bg-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-800/80 transition-colors"
                         >
                             <BellIcon className="w-6 h-6" />
                             <span className="font-semibold text-sm">Aktifkan Notifikasi</span>
-                        </button>
-                    )}
-                     {notificationPermission === 'denied' && (
-                        <button 
-                            disabled
-                            title="Izin notifikasi diblokir di pengaturan browser Anda."
-                            className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 cursor-not-allowed"
-                        >
-                            <BellIcon className="w-6 h-6" />
-                            <span className="font-semibold text-sm">Notifikasi Diblokir</span>
-                        </button>
-                    )}
-                     {(micPermission === 'default' || micPermission === 'prompt') && (
-                        <button 
-                            onClick={requestMicPermission}
-                            className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-lg text-slate-600 dark:text-rose-200 bg-rose-100 dark:bg-rose-800/50 hover:bg-rose-200 dark:hover:bg-rose-800/80 transition-colors"
-                        >
-                            <MicIcon className="w-6 h-6" />
-                            <span className="font-semibold text-sm">Aktifkan Mikrofon</span>
-                        </button>
-                    )}
-                     {micPermission === 'denied' && (
-                        <button 
-                            disabled
-                            title="Izin mikrofon diblokir di pengaturan browser Anda."
-                            className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 cursor-not-allowed"
-                        >
-                            <MicIcon className="w-6 h-6" />
-                            <span className="font-semibold text-sm">Mikrofon Diblokir</span>
                         </button>
                     )}
                     <div className="flex items-center space-x-2">

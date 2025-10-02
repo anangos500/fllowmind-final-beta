@@ -1,17 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useCallback, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import DailyView from './components/DailyView';
@@ -42,6 +28,7 @@ import InstallPwaPrompt from './components/InstallPwaPrompt';
 import PermissionWizard from './components/PermissionWizard';
 import SettingsView from './components/SettingsView';
 import DeleteAccountModal from './components/DeleteAccountModal';
+import DeleteSuccessModal from './components/DeleteSuccessModal';
 
 
 const AppContent: React.FC = () => {
@@ -69,6 +56,7 @@ const AppContent: React.FC = () => {
   const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const [showPermissionWizard, setShowPermissionWizard] = useState(false);
   const [isDeleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
 
   // Simpan tampilan saat ini ke localStorage setiap kali berubah
@@ -234,6 +222,12 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleSuccessModalClose = () => {
+    setShowDeleteSuccess(false);
+    // Sign out only after the user has acknowledged the success message.
+    signOut();
+  };
+
   const handleDeleteAccount = async (password: string): Promise<void> => {
     if (!session) {
       throw new Error("Sesi tidak ditemukan.");
@@ -252,10 +246,10 @@ const AppContent: React.FC = () => {
         throw new Error(errorData.error || 'Gagal menghapus akun.');
     }
     
-    // Sign out on the client-side after successful deletion
-    await signOut();
+    // Close the password confirmation modal and show the success modal.
+    // The sign out process is deferred until the success modal is closed.
     setDeleteAccountModalOpen(false);
-    alert('Akun Anda telah berhasil dihapus secara permanen.');
+    setShowDeleteSuccess(true);
   };
 
 
@@ -383,6 +377,10 @@ const AppContent: React.FC = () => {
           onClose={() => setDeleteAccountModalOpen(false)}
           onConfirmDelete={handleDeleteAccount}
         />
+      )}
+
+      {showDeleteSuccess && (
+        <DeleteSuccessModal onClose={handleSuccessModalClose} />
       )}
 
       {visibility === 'full' && <FocusMode />}

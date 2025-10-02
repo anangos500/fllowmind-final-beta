@@ -1,4 +1,8 @@
 
+
+
+
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Task, Journal, TaskStatus } from '../types';
 import jsPDF from 'jspdf';
@@ -195,9 +199,7 @@ const JournalView: React.FC<JournalViewProps> = ({ tasks, journals, createOrUpda
         });
         
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        // FIX: Replaced pdf.getBlob() with the correct jsPDF method pdf.output('blob')
-        // to resolve the TypeScript error and ensure proper functionality.
-        const pdfBlob = pdf.output('blob');
+        const pdfBlob = pdf.getBlob();
 
         await createOrUpdateJournal(
             selectedDate, 

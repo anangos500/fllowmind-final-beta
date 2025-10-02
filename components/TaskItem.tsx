@@ -1,5 +1,8 @@
 
 
+
+
+
 import React, { useMemo } from 'react';
 import { Task, TaskStatus } from '../types';
 import { STATUS_STYLES } from '../constants';
@@ -34,7 +37,7 @@ const CountdownTimer: React.FC<{ startTime: string, endTime: string, status: Tas
   
   if (now < start) {
      return (
-      <span className="text-slate-500 dark:text-slate-400 font-medium">
+      <span className="text-slate-500 dark:text-slate-200 font-medium">
         Starts in {startsInFormatted.days > 0 && `${startsInFormatted.days}d `}
         {startsInFormatted.hours > 0 && `${startsInFormatted.hours}h `}
         {`${startsInFormatted.minutes}m ${startsInFormatted.seconds}s`}
@@ -74,7 +77,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onSelect, onStatusChange }) =
         </div>
       </div>
 
-      <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-4">
+      <div className="flex items-center text-sm text-slate-500 dark:text-slate-200 mb-4">
         <ClockIcon className="w-4 h-4 mr-2" />
         <CountdownTimer startTime={task.startTime} endTime={task.endTime} status={task.status} />
       </div>
@@ -82,8 +85,8 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onSelect, onStatusChange }) =
       {task.checklist.length > 0 && (
         <div className="mb-4">
             <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Checklist</span>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{Math.round(checklistProgress)}%</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-200">Checklist</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-200">{Math.round(checklistProgress)}%</span>
             </div>
             <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
                 <div 
@@ -95,7 +98,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onSelect, onStatusChange }) =
       )}
 
       <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-        <div className="text-sm text-slate-400 dark:text-slate-500">
+        <div className="text-sm text-slate-400 dark:text-slate-300">
           {new Date(task.startTime).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
         </div>
         {task.status !== TaskStatus.Done && (

@@ -119,6 +119,13 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
   const [speechError, setSpeechError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const autoSubmitTimerRef = useRef<number | null>(null);
+  const isListeningRef = useRef(isListening);
+
+  // Keep the ref in sync with the state to avoid stale closures in callbacks
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
+
 
   const handleAiRequest = useCallback(async (command?: string) => {
     const textToSubmit = command || inputValue;
@@ -128,10 +135,8 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
     setShowRetryModal(false);
     if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
     
-    // Stop listening if it was active
-    if (isListening) {
-        setIsListening(false);
-    }
+    // Stop listening after a command is sent
+    setIsListening(false);
 
     try {
       const currentDate = new Date().toISOString();
@@ -189,17 +194,25 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
       if (!hadConflict) setInputValue('');
     } catch (err) { console.error("Error with AI task creation:", err); setShowRetryModal(true); } 
     finally { setIsAiLoading(false); }
-  }, [inputValue, onAddTask, tasks, isListening]);
+  }, [inputValue, onAddTask, tasks]);
+  
+  const handleAiRequestRef = useRef(handleAiRequest);
+  useEffect(() => {
+    handleAiRequestRef.current = handleAiRequest;
+  }, [handleAiRequest]);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
       setSpeechError("Speech recognition not supported in this browser.");
       return;
     }
     if (!recognitionRef.current) {
-      const recognition: SpeechRecognition = new SpeechRecognition();
-      recognition.continuous = true;
+      const recognition = new SpeechRecognitionAPI();
+      
+      // FIX: Set continuous to false for better reliability on mobile.
+      // We will simulate continuous listening by restarting it in the `onend` event.
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang = 'id-ID';
 
@@ -217,7 +230,7 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
           autoSubmitTimerRef.current = window.setTimeout(() => {
             setInputValue(currentVal => {
               if (currentVal.trim()) {
-                handleAiRequest(currentVal.trim());
+                handleAiRequestRef.current(currentVal.trim());
               }
               return currentVal;
             });
@@ -231,20 +244,30 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
           setIsListening(false);
         }
       };
-
+      
+      // FIX: Implement a restart loop in the onend handler to simulate continuous listening.
+      // This is more robust on Android than `continuous: true`.
       recognition.onend = () => {
-        if (isListening) {
-          setIsListening(false);
+        if (isListeningRef.current) {
+          try {
+            recognition.start();
+          } catch(e) {
+            console.error("Recognition restart failed", e);
+            setIsListening(false);
+          }
         }
       };
       recognitionRef.current = recognition;
     }
 
     return () => {
-      recognitionRef.current?.stop();
       if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
+      if (recognitionRef.current) {
+          recognitionRef.current.onend = null; // Prevent restart on unmount
+          recognitionRef.current.stop();
+      }
     };
-  }, [handleAiRequest, isListening]);
+  }, []);
   
   useEffect(() => {
     if (isListening) {
@@ -253,7 +276,6 @@ const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenMan
         recognitionRef.current?.start();
       } catch (e) {
         console.warn("Could not start recognition:", e);
-        setIsListening(false);
       }
     } else {
       recognitionRef.current?.stop();

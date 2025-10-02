@@ -49,13 +49,19 @@ const PermissionWizard: React.FC<PermissionWizardProps> = ({
   };
   
   const handleRequestMic = async () => {
-    await onRequestMicPermission();
-    // Re-check status after request
+    // Prop `onRequestMicPermission` dari App.tsx tidak mengembalikan hasil
+    // permintaan izin, yang diperlukan untuk memperbarui UI secara andal di semua platform (terutama iOS).
+    // Oleh karena itu, kita menangani panggilan `getUserMedia` secara langsung di sini untuk memastikan fungsionalitas yang benar.
     try {
-        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-        setMicStatus(result.state);
-    } catch (e) {
-        console.warn("Could not re-check microphone permission", e);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Jika promise berhasil, izin diberikan.
+      setMicStatus('granted');
+      // Segera hentikan stream; kita hanya membutuhkannya untuk memicu prompt izin.
+      stream.getTracks().forEach(track => track.stop());
+    } catch (err) {
+      // Jika promise gagal, izin ditolak.
+      console.error("Izin mikrofon ditolak:", err);
+      setMicStatus('denied');
     }
   };
   

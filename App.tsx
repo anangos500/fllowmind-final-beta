@@ -66,13 +66,17 @@ const AppContent: React.FC = () => {
 
   // Menampilkan panduan izin (Permission Wizard) saat pertama kali masuk
   useEffect(() => {
+    // Timer untuk menunda wizard agar tidak terlalu mengganggu
+    let wizardTimer: number | undefined;
+
     const checkPermissions = async () => {
       // Jangan tampilkan jika wizard telah ditutup di sesi ini
       if (sessionStorage.getItem('flowmind-permission-wizard-dismissed')) {
         return;
       }
       
-      // Jangan tampilkan wizard jika tur orientasi sedang aktif
+      // KONDISI UTAMA: Jangan tampilkan wizard jika tur orientasi sedang aktif.
+      // Jika showTour benar, kita keluar lebih awal.
       if (showTour) {
           return;
       }
@@ -88,7 +92,10 @@ const AppContent: React.FC = () => {
       }
       
       if (notifPerm === 'default' || micPerm === 'prompt') {
-        setTimeout(() => setShowPermissionWizard(true), 1500);
+        // Atur timeout untuk menampilkan wizard setelah jeda singkat.
+        wizardTimer = window.setTimeout(() => {
+            setShowPermissionWizard(true);
+        }, 1500);
       }
     };
     
@@ -96,7 +103,15 @@ const AppContent: React.FC = () => {
     if (profile) {
       checkPermissions();
     }
-  // Tambahkan showTour sebagai dependensi agar efek ini berjalan kembali saat tur selesai
+    
+    // Fungsi pembersihan: Batalkan timeout jika komponen di-unmount atau dependensi berubah
+    // (misalnya, showTour menjadi true) sebelum timeout selesai. Ini sangat penting
+    // untuk mencegah wizard muncul setelah tur dimulai.
+    return () => {
+      if (wizardTimer) {
+        clearTimeout(wizardTimer);
+      }
+    };
   }, [profile, showTour]);
 
 

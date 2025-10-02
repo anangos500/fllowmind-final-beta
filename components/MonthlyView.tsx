@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Task, TaskStatus } from '../types';
 import ChevronLeftIcon from './icons/ChevronLeftIcon';
@@ -7,6 +7,7 @@ import CheckCircleIcon from './icons/CheckCircleIcon';
 import ClockIcon from './icons/ClockIcon';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTasksForDay } from '../utils/taskUtils';
+import XIcon from './icons/XIcon';
 
 interface MonthlyViewProps {
   tasks: Task[];
@@ -14,7 +15,13 @@ interface MonthlyViewProps {
 
 const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const { theme } = useTheme();
+
+  // Reset selected day when month changes
+  useEffect(() => {
+    setSelectedDay(null);
+  }, [currentDate]);
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -32,6 +39,12 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
     const date = new Date(year, month, day);
     return getTasksForDay(date, tasks);
   };
+
+  const tasksForSelectedDay = useMemo(() => {
+    if (!selectedDay) return [];
+    const date = new Date(year, month, selectedDay);
+    return getTasksForDay(date, tasks);
+  }, [selectedDay, year, month, tasks]);
   
   const monthTasks = tasks.filter(task => new Date(task.startTime).getMonth() === month && new Date(task.startTime).getFullYear() === year);
   
@@ -92,8 +105,14 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
               const isToday = today.getFullYear() === year &&
                               today.getMonth() === month &&
                               today.getDate() === day;
+              const isSelected = selectedDay === day;
+
               return (
-                <div key={day} className={`h-20 sm:h-28 p-1.5 sm:p-2 border dark:border-slate-700 rounded-lg flex flex-col transition-shadow hover:shadow-md ${isToday ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-400 dark:border-blue-700' : 'bg-white dark:bg-slate-800'}`}>
+                <div 
+                  key={day} 
+                  onClick={() => setSelectedDay(day)}
+                  className={`h-20 sm:h-28 p-1.5 sm:p-2 border dark:border-slate-700 rounded-lg flex flex-col transition-all duration-200 cursor-pointer ${isToday ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-400 dark:border-blue-700' : 'bg-white dark:bg-slate-800'} ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}
+                >
                   <span className={`font-semibold text-sm sm:text-base ${isToday ? 'text-blue-600 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300'}`}>{day}</span>
                   <div className="mt-1 space-y-1 flex-grow overflow-hidden text-xs">
                     {completedTasks.slice(0, 2).map(task => (
@@ -128,46 +147,78 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Statistik Bulan Ini</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                <span className="font-semibold text-slate-600 dark:text-slate-300">Total Tugas</span>
-                <span className="font-bold text-slate-800 dark:text-slate-100">{stats.total}</span>
+        <div className="lg:col-span-1 flex flex-col gap-8">
+            {selectedDay && (
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm animate-fade-in">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                    Tugas untuk {new Date(year, month, selectedDay).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}
+                  </h3>
+                  <button onClick={() => setSelectedDay(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <XIcon className="w-5 h-5" />
+                  </button>
+                </div>
+                {tasksForSelectedDay.length > 0 ? (
+                  <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                    {tasksForSelectedDay.map(task => (
+                      <div key={task.id} className="p-3 rounded-md bg-slate-50 dark:bg-slate-700/50 flex items-start gap-3">
+                        <span className={`w-2.5 h-2.5 mt-1.5 rounded-full flex-shrink-0 ${task.status === TaskStatus.Done ? 'bg-green-500' : 'bg-slate-400'}`}></span>
+                        <div>
+                          <p className={`font-medium ${task.status === TaskStatus.Done ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>{task.title}</p>
+                          <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <ClockIcon className="w-3 h-3 mr-1.5" />
+                            <span>{new Date(task.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')} - {new Date(task.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-slate-500 dark:text-slate-400 py-4">Tidak ada tugas yang dijadwalkan untuk hari ini.</p>
+                )}
+              </div>
+            )}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Statistik Bulan Ini</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                    <span className="font-semibold text-slate-600 dark:text-slate-300">Total Tugas</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100">{stats.total}</span>
+                </div>
+                <div className="flex justify-between p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                    <span className="font-semibold text-green-700 dark:text-green-300">Selesai</span>
+                    <span className="font-bold text-green-800 dark:text-green-200">{stats.done}</span>
+                </div>
+                <div className="flex justify-between p-3 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
+                    <span className="font-semibold text-yellow-700 dark:text-yellow-300">Tertunda</span>
+                    <span className="font-bold text-yellow-800 dark:text-yellow-200">{stats.pending}</span>
+                </div>
+                <div className="flex justify-between p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                    <span className="font-semibold text-blue-700 dark:text-blue-300">Produktivitas</span>
+                    <span className="font-bold text-blue-800 dark:text-blue-200">{stats.productivity}%</span>
+                </div>
+              </div>
+              <div className="mt-6">
+                <h4 className="text-md font-bold text-slate-800 dark:text-slate-200 mb-2">Tugas Selesai per Hari</h4>
+                <div style={{ width: '100%', height: 200 }}>
+                    <ResponsiveContainer>
+                        <BarChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartTheme.gridColor}/>
+                            <XAxis dataKey="name" fontSize={12} tick={{ fill: chartTheme.textColor }}/>
+                            <YAxis allowDecimals={false} fontSize={12} tick={{ fill: chartTheme.textColor }}/>
+                            <Tooltip 
+                                cursor={{fill: 'rgba(125, 125, 125, 0.2)'}}
+                                contentStyle={{ 
+                                    backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+                                    borderColor: theme === 'dark' ? '#334155' : '#e2e8f0',
+                                }}
+                            />
+                            <Bar dataKey="selesai" fill="#3b82f6" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                <span className="font-semibold text-green-700 dark:text-green-300">Selesai</span>
-                <span className="font-bold text-green-800 dark:text-green-200">{stats.done}</span>
-            </div>
-            <div className="flex justify-between p-3 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
-                <span className="font-semibold text-yellow-700 dark:text-yellow-300">Tertunda</span>
-                <span className="font-bold text-yellow-800 dark:text-yellow-200">{stats.pending}</span>
-            </div>
-            <div className="flex justify-between p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                <span className="font-semibold text-blue-700 dark:text-blue-300">Produktivitas</span>
-                <span className="font-bold text-blue-800 dark:text-blue-200">{stats.productivity}%</span>
-            </div>
-          </div>
-          <div className="mt-6">
-            <h4 className="text-md font-bold text-slate-800 dark:text-slate-200 mb-2">Tugas Selesai per Hari</h4>
-             <div style={{ width: '100%', height: 200 }}>
-                <ResponsiveContainer>
-                    <BarChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartTheme.gridColor}/>
-                        <XAxis dataKey="name" fontSize={12} tick={{ fill: chartTheme.textColor }}/>
-                        <YAxis allowDecimals={false} fontSize={12} tick={{ fill: chartTheme.textColor }}/>
-                        <Tooltip 
-                            cursor={{fill: 'rgba(125, 125, 125, 0.2)'}}
-                            contentStyle={{ 
-                                backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-                                borderColor: theme === 'dark' ? '#334155' : '#e2e8f0',
-                            }}
-                        />
-                        <Bar dataKey="selesai" fill="#3b82f6" />
-                    </BarChart>
-                </ResponsiveContainer>
-             </div>
-          </div>
         </div>
       </div>
     </div>

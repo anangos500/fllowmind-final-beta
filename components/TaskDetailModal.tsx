@@ -308,10 +308,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
                         className="hidden"
                     />
                     <StarIcon filled={editedTask.isImportant} className={`w-6 h-6 transition-colors ${editedTask.isImportant ? 'text-amber-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-amber-400'}`} />
-                    <span className={`ml-2 font-semibold ${editedTask.isImportant ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'}`}>Penting</span>
+                    <span className={`ml-2 font-semibold ${editedTask.isImportant ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-200'}`}>Penting</span>
                 </label>
             </div>
-          <button onClick={handleClose} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"><XIcon className="w-6 h-6"/></button>
+          <button onClick={handleClose} className="text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-200"><XIcon className="w-6 h-6"/></button>
         </header>
         
         <main className="p-5 sm:p-8 overflow-y-auto">
@@ -330,12 +330,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
 
           <div className="space-y-6 mb-6">
             <div>
-                <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-3">Jadwal</h4>
+                <h4 className="font-semibold text-slate-700 dark:text-slate-200 mb-3">Jadwal</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      {editedTask.recurrence === Recurrence.Daily ? (
                         <>
                             <div>
-                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Mulai</label>
+                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Mulai</label>
                                 <input 
                                     type="time" 
                                     value={getLocalTimeString(editedTask.startTime)} 
@@ -344,7 +344,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Selesai</label>
+                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Selesai</label>
                                 <input 
                                     type="time" 
                                     value={getLocalTimeString(editedTask.endTime)} 
@@ -356,7 +356,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
                     ) : (
                         <>
                             <div>
-                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Mulai</label>
+                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Mulai</label>
                                 <input 
                                     type="datetime-local" 
                                     value={toLocalDatetimeString(editedTask.startTime)} 
@@ -365,7 +365,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Selesai</label>
+                                <label className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Selesai</label>
                                 <input 
                                     type="datetime-local" 
                                     value={toLocalDatetimeString(editedTask.endTime)} 
@@ -378,7 +378,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
                 </div>
             </div>
              <div>
-                <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-3">Pengulangan</h4>
+                <h4 className="font-semibold text-slate-700 dark:text-slate-200 mb-3">Pengulangan</h4>
                 <div className="flex items-center text-slate-600 dark:text-slate-300">
                     <RepeatIcon className="w-5 h-5 mr-3 flex-shrink-0"/>
                     <select
@@ -392,7 +392,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
                 </div>
             </div>
             <div>
-                <h4 className="flex items-center font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                <h4 className="flex items-center font-semibold text-slate-700 dark:text-slate-200 mb-3">
                     <TagIcon className="w-5 h-5 mr-2" />
                     Tags
                 </h4>
@@ -421,7 +421,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
 
           <div className="mb-6">
             <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-slate-700 dark:text-slate-300">Checklist</h4>
+                <h4 className="font-semibold text-slate-700 dark:text-slate-200">Checklist</h4>
                 <button
                     onClick={handleAiChecklist}
                     disabled={isAiProcessing || !editedTask.title.trim()}
@@ -451,14 +451,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
                         if (e.key === 'Enter') handleChecklistTextChange(item.id, editingItemText);
                         if (e.key === 'Escape') setEditingItemId(null);
                       }}
-                      className="ml-3 flex-grow bg-transparent border-b-2 border-blue-500 focus:outline-none text-slate-700 dark:text-slate-300"
+                      className="ml-3 flex-grow bg-transparent border-b-2 border-blue-500 focus:outline-none text-slate-700 dark:text-slate-200"
                       autoFocus
                     />
                   ) : (
                     <label
                       htmlFor={item.id}
                       onClick={() => { setEditingItemId(item.id); setEditingItemText(item.text); }}
-                      className={`ml-3 flex-grow text-slate-700 dark:text-slate-300 cursor-text ${item.completed ? 'line-through text-slate-500 dark:text-slate-400' : ''}`}
+                      className={`ml-3 flex-grow text-slate-700 dark:text-slate-200 cursor-text ${item.completed ? 'line-through text-slate-500 dark:text-slate-400' : ''}`}
                     >
                       {item.text}
                     </label>
@@ -494,7 +494,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, tasks, onUpdate
           </div>
           
           <div className="mb-6">
-            <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-3">Catatan</h4>
+            <h4 className="font-semibold text-slate-700 dark:text-slate-200 mb-3">Catatan</h4>
             <textarea
               value={editedTask.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}

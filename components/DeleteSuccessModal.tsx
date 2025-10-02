@@ -31,7 +31,7 @@ const DeleteSuccessModal: React.FC<DeleteSuccessModalProps> = ({ onClose }) => {
             </div>
         </div>
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-3">Akun Berhasil Dihapus</h2>
-        <p className="text-slate-600 dark:text-slate-300 mb-6">
+        <p className="text-slate-600 dark:text-slate-200 mb-6">
           Semua data Anda telah dihapus. Anda akan dialihkan ke halaman masuk.
         </p>
         <button

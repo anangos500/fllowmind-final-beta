@@ -315,28 +315,28 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                 if (nextTask && task.status !== TaskStatus.Done) {
                     timeToNext = new Date(nextTask.startTime).getTime() - new Date(task.endTime).getTime();
                 }
-                const isOverdue = new Date(task.endTime).getTime() < new Date().getTime() && task.status !== TaskStatus.Done;
+                const isPastDueToday = new Date(task.endTime).getTime() < new Date().getTime() && task.status !== TaskStatus.Done;
 
                 return (
                   <div key={task.id}>
                     <div
                         onClick={() => onSelectTask(task)}
-                        className="p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-all duration-200 group"
+                        className="p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-all duration-200 group hover:scale-[1.02]"
                     >
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-3 sm:gap-x-4">
-                            {/* Left Side: Checkbox, Title, Tags, Recurrence */}
-                            <div className="flex items-center flex-1 min-w-0">
+                        <div className="flex flex-col">
+                            {/* Top part: Checkbox, title, tags */}
+                            <div className="flex items-start">
                                 <input
                                     type="checkbox"
                                     aria-label={`Tandai "${task.title}" sebagai selesai`}
                                     checked={task.status === TaskStatus.Done}
                                     onClick={(e) => e.stopPropagation()}
                                     onChange={(e) => handleStatusChange(task, e.target.checked)}
-                                    className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-600 border-2 border-solid border-slate-300 dark:border-slate-500 accent-blue-600 focus:ring-blue-500 mr-4 flex-shrink-0"
+                                    className="w-5 h-5 mt-1 rounded bg-slate-100 dark:bg-slate-600 border-2 border-solid border-slate-300 dark:border-slate-500 accent-blue-600 focus:ring-blue-500 mr-4 flex-shrink-0"
                                 />
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center">
-                                        <span className={`font-medium text-base transition-colors duration-300 truncate ${task.status === TaskStatus.Done ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                                        <span className={`font-medium text-base transition-colors duration-300 ${task.status === TaskStatus.Done ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
                                             {task.title}
                                         </span>
                                         {task.recurrence === Recurrence.Daily && <RepeatIcon className="w-4 h-4 ml-2 text-slate-400 dark:text-slate-500 flex-shrink-0" title="Tugas Harian"/>}
@@ -353,31 +353,30 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                                 </div>
                             </div>
                             
-                            {/* Right Side: Metadata and Actions */}
-                            <div className="pl-9 sm:pl-0 flex items-center justify-between sm:justify-end sm:gap-4 flex-shrink-0">
-                                {/* Metadata Group (Checklist & Time) */}
-                                <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-                                    {checklistProgress && (
-                                        <span className="text-sm font-medium hidden md:inline">{checklistProgress}</span>
+                            {/* Bottom part: Metadata and Actions */}
+                            <div className="pl-9 mt-3 flex items-center justify-between">
+                                {/* Left side: Metadata */}
+                                <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+                                    {isPastDueToday ? (
+                                        <span className="font-bold text-amber-500 dark:text-amber-400 text-sm">Menunggu konfirmasi</span>
+                                    ) : (
+                                        <div className="flex items-center text-sm font-semibold">
+                                            <ClockIcon className="w-4 h-4 mr-1.5" />
+                                            <span>
+                                                {new Date(task.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')} - {new Date(task.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')}
+                                            </span>
+                                        </div>
                                     )}
-                                    <div className="flex items-center text-sm font-semibold">
-                                        {isOverdue ? (
-                                            <span className="font-bold text-red-500 dark:text-red-400">Overdue</span>
-                                        ) : (
-                                            <>
-                                                <ClockIcon className="w-4 h-4 mr-1.5" />
-                                                <span>
-                                                    {new Date(task.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')} - {new Date(task.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')}
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
+                                    {checklistProgress && (
+                                        <span className="text-sm font-medium">{checklistProgress} selesai</span>
+                                    )}
+                                    {task.isImportant && <StarIcon filled className="w-5 h-5 text-amber-500" />}
                                 </div>
-
-                                {/* Action Buttons Group */}
-                                <div className="flex items-center gap-1 sm:gap-2 text-slate-400">
-                                    {isOverdue && (
-                                        <div className="relative flex-shrink-0">
+                                
+                                {/* Right side: Action Buttons */}
+                                <div className="flex items-center gap-2 text-slate-400 flex-shrink-0">
+                                    {isPastDueToday && (
+                                        <div className="relative">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setAddTimeTaskId(addTimeTaskId === task.id ? null : task.id); }}
                                                 title="Tambah Waktu"
@@ -390,12 +389,11 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                                             )}
                                         </div>
                                     )}
-                                    {task.isImportant && <StarIcon filled className="w-5 h-5 text-amber-500 flex-shrink-0" />}
                                     {task.status !== TaskStatus.Done && (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setTasksToMove([task]); }}
                                             title="Pindahkan tugas"
-                                            className="sm:opacity-0 group-hover:sm:opacity-100 transition-opacity hover:text-blue-600 dark:hover:text-blue-400 flex-shrink-0"
+                                            className="transition-opacity hover:text-blue-600 dark:hover:text-blue-400"
                                         >
                                             <ArrowRightCircleIcon className="w-5 h-5" />
                                         </button>
@@ -403,7 +401,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                                     <button
                                         onClick={(e) => handleDeleteRequest(e, task.id)}
                                         title="Hapus tugas"
-                                        className="sm:opacity-0 group-hover:sm:opacity-100 transition-opacity text-red-500 hover:text-red-700 dark:hover:text-red-400 flex-shrink-0"
+                                        className="transition-opacity text-red-500 hover:text-red-700 dark:hover:text-red-400"
                                     >
                                         <TrashIcon className="w-5 h-5" />
                                     </button>

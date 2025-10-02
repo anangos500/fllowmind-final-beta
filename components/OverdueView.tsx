@@ -113,7 +113,7 @@ const OverdueView: React.FC<OverdueViewProps> = ({ tasks, onSelectTask, onUpdate
     <div className="p-4 sm:p-8 max-w-4xl mx-auto">
       <header className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Tugas Terlewat</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Tugas dari hari-hari sebelumnya yang belum selesai.</p>
+        <p className="text-slate-500 dark:text-slate-300 mt-1">Tugas dari hari-hari sebelumnya yang belum selesai.</p>
       </header>
 
       {overdue.length > 0 && (
@@ -132,7 +132,7 @@ const OverdueView: React.FC<OverdueViewProps> = ({ tasks, onSelectTask, onUpdate
         {sortedDates.length > 0 ? sortedDates.map(date => (
           <div key={date}>
             <div className="flex justify-between items-center mb-3">
-                <h2 className="text-xl font-bold text-slate-700 dark:text-slate-300">{date}</h2>
+                <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">{date}</h2>
                 <button
                   onClick={() => handleBulkDeleteRequest(grouped[date])}
                   className="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline"
@@ -151,7 +151,7 @@ const OverdueView: React.FC<OverdueViewProps> = ({ tasks, onSelectTask, onUpdate
                         {task.isImportant && <StarIcon filled className="w-5 h-5 text-amber-500 mr-3 flex-shrink-0" />}
                         <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{task.title}</span>
                     </div>
-                    <div className="flex items-center space-x-2 sm:space-x-3 pl-4 text-slate-500 dark:text-slate-400 flex-shrink-0">
+                    <div className="flex items-center space-x-2 sm:space-x-3 pl-4 text-slate-500 dark:text-slate-300 flex-shrink-0">
                         {task.tags && task.tags.length > 0 && (
                             <div className="hidden sm:flex flex-wrap gap-x-2 gap-y-1">
                                 {task.tags.map(tag => (
@@ -189,8 +189,8 @@ const OverdueView: React.FC<OverdueViewProps> = ({ tasks, onSelectTask, onUpdate
           </div>
         )) : (
           <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300">Tidak ada tugas yang terlewat!</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Kerja bagus! Semua tugas Anda sudah diperbarui.</p>
+            <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-200">Tidak ada tugas yang terlewat!</h2>
+            <p className="text-slate-500 dark:text-slate-300 mt-2">Kerja bagus! Semua tugas Anda sudah diperbarui.</p>
           </div>
         )}
       </div>

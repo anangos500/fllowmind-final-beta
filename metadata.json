@@ -1,4 +1,5 @@
 {
   "name": "Flowmind",
-  "description": "Flowmind is an intelligent planner powered by AI to help you achieve focus, organize your workflow, and gain momentum on your goals."
+  "description": "Flowmind is an intelligent planner powered by AI to help you achieve focus, organize your workflow, and gain momentum on your goals.",
+  "requestFramePermissions": []
 }

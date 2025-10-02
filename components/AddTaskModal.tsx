@@ -121,7 +121,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
       className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
         currentValue === value
           ? 'bg-blue-600 text-white'
-          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
       } ${disabled ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed' : ''}`}
     >
       {label}
@@ -134,7 +134,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
       <form onSubmit={handleSubmit} className={`bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md transition-all duration-300 ease-out overflow-hidden ${isAnimatingOut ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
         <header className="p-5 border-b dark:border-slate-700 flex justify-between items-center">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Tugas Baru</h2>
-          <button type="button" onClick={handleClose} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">
+          <button type="button" onClick={handleClose} className="text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-200">
             <XIcon className="w-6 h-6" />
           </button>
         </header>
@@ -145,7 +145,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
             </div>
           )}
           <div>
-            <label htmlFor="title" className="block text-sm font-semibold text-slate-800 dark:text-slate-300 mb-2">
+            <label htmlFor="title" className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
               Judul Tugas
             </label>
             <input
@@ -159,13 +159,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
               Jadwal
             </label>
             {recurrence === Recurrence.Daily ? (
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="daily-start-time" className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Mulai</label>
+                        <label htmlFor="daily-start-time" className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Mulai</label>
                         <input
                             id="daily-start-time"
                             type="time"
@@ -176,7 +176,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
                         />
                     </div>
                     <div>
-                        <label htmlFor="daily-end-time" className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Selesai</label>
+                        <label htmlFor="daily-end-time" className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Selesai</label>
                         <input
                             id="daily-end-time"
                             type="time"
@@ -190,7 +190,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
             ) : (
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="start-time" className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Mulai</label>
+                        <label htmlFor="start-time" className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Mulai</label>
                         <input
                             id="start-time"
                             type="datetime-local"
@@ -201,7 +201,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
                         />
                     </div>
                     <div>
-                        <label htmlFor="end-time" className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Waktu Selesai</label>
+                        <label htmlFor="end-time" className="block text-sm font-medium text-slate-500 dark:text-slate-200 mb-1">Waktu Selesai</label>
                         <input
                             id="end-time"
                             type="datetime-local"
@@ -215,7 +215,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAddTask, tasks, 
             )}
           </div>
            <div>
-            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
               Ulangi Tugas
             </label>
             <div className="flex space-x-2">

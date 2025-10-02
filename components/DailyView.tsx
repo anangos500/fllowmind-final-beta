@@ -27,7 +27,7 @@ type SortOption = 'deadline' | 'priority';
 type FilterOption = 'all' | 'important' | 'done';
 
 const FilterButton: React.FC<{ label: string; isActive: boolean; onClick: () => void; }> = ({ label, isActive, onClick }) => (
-    <button onClick={onClick} className={`px-3 sm:px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${isActive ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}`}>
+    <button onClick={onClick} className={`px-3 sm:px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${isActive ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600'}`}>
         {label}
     </button>
 );
@@ -81,7 +81,7 @@ const AddTimePopover: React.FC<{
                     <button
                         key={minutes}
                         onClick={() => onExtendTime(task, minutes)}
-                        className="w-full text-left px-3 py-1.5 text-sm rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"
+                        className="w-full text-left px-3 py-1.5 text-sm rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600"
                     >
                         + {minutes} menit
                     </button>
@@ -276,7 +276,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
     <div className="p-4 sm:p-8 max-w-4xl mx-auto">
       <header className="mb-6">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Hari Ini</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-slate-500 dark:text-slate-200 mt-1">
           {today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </header>
@@ -285,13 +285,13 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
 
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between p-3 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
         <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-slate-600 dark:text-slate-300 mr-2 text-sm sm:text-base">Filter:</span>
+            <span className="font-semibold text-slate-600 dark:text-slate-200 mr-2 text-sm sm:text-base">Filter:</span>
             <FilterButton label="Semua" isActive={filterOption === 'all'} onClick={() => setFilterOption('all')} />
             <FilterButton label="Penting" isActive={filterOption === 'important'} onClick={() => setFilterOption('important')} />
             <FilterButton label="Selesai" isActive={filterOption === 'done'} onClick={() => setFilterOption('done')} />
         </div>
         <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-600 dark:text-slate-300 mr-2 text-sm sm:text-base">Urutkan:</span>
+            <span className="font-semibold text-slate-600 dark:text-slate-200 mr-2 text-sm sm:text-base">Urutkan:</span>
             <FilterButton label="Waktu" isActive={sortOption === 'deadline'} onClick={() => setSortOption('deadline')} />
             <FilterButton label="Prioritas" isActive={sortOption === 'priority'} onClick={() => setSortOption('priority')} />
         </div>
@@ -339,7 +339,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                                         <span className={`font-medium text-base transition-colors duration-300 ${task.status === TaskStatus.Done ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
                                             {task.title}
                                         </span>
-                                        {task.recurrence === Recurrence.Daily && <RepeatIcon className="w-4 h-4 ml-2 text-slate-400 dark:text-slate-500 flex-shrink-0" title="Tugas Harian"/>}
+                                        {task.recurrence === Recurrence.Daily && <RepeatIcon className="w-4 h-4 ml-2 text-slate-400 dark:text-slate-300 flex-shrink-0" title="Tugas Harian"/>}
                                     </div>
                                     {task.tags && task.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1.5">
@@ -356,7 +356,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                             {/* Bottom part: Metadata and Actions */}
                             <div className="pl-9 mt-3 flex items-center justify-between">
                                 {/* Left side: Metadata */}
-                                <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+                                <div className="flex items-center gap-4 text-slate-500 dark:text-slate-200">
                                     {isPastDueToday ? (
                                         <span className="font-bold text-amber-500 dark:text-amber-400 text-sm">Menunggu konfirmasi</span>
                                     ) : (
@@ -374,7 +374,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                                 </div>
                                 
                                 {/* Right side: Action Buttons */}
-                                <div className="flex items-center gap-2 text-slate-400 flex-shrink-0">
+                                <div className="flex items-center gap-2 text-slate-400 dark:text-slate-200 flex-shrink-0">
                                     {isPastDueToday && (
                                         <div className="relative">
                                             <button
@@ -412,7 +412,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
                     {timeToNext !== null && timeToNext > 0 && nextTask && (
                         <div className="pl-5 h-8 flex items-center">
                             <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-600 h-full w-px ml-[9px]"></div>
-                            <div className="ml-5 text-xs font-semibold text-slate-400 dark:text-slate-500 truncate">
+                            <div className="ml-5 text-xs font-semibold text-slate-400 dark:text-slate-300 truncate">
                                 &#9662; {formatDuration(timeToNext)} - menuju {nextTask.title}
                             </div>
                         </div>
@@ -422,8 +422,8 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, onSelectTask, onUpdateTask
             })
           ) : (
             <div className="text-center py-10">
-              <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300">Tidak ada tugas yang cocok!</h2>
-              <p className="text-slate-500 dark:text-slate-400 mt-2">Coba ubah filter atau tambahkan tugas baru.</p>
+              <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-200">Tidak ada tugas yang cocok!</h2>
+              <p className="text-slate-500 dark:text-slate-200 mt-2">Coba ubah filter atau tambahkan tugas baru.</p>
             </div>
           )}
         </div>

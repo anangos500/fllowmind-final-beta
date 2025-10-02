@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import FlowmindIcon from './icons/FlowmindIcon';
@@ -130,15 +132,15 @@ const Auth: React.FC = () => {
 
   const renderPasswordValidation = () => (
     <div className="space-y-1 mt-3 text-xs">
-      <p className={`flex items-center transition-colors ${hasMinLength ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}`}>
+      <p className={`flex items-center transition-colors ${hasMinLength ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-300'}`}>
         <CheckIcon className="w-3.5 h-3.5 mr-2" />
         Minimal 8 karakter
       </p>
-      <p className={`flex items-center transition-colors ${hasUppercase ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}`}>
+      <p className={`flex items-center transition-colors ${hasUppercase ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-300'}`}>
         <CheckIcon className="w-3.5 h-3.5 mr-2" />
         Minimal 1 huruf besar
       </p>
-      <p className={`flex items-center transition-colors ${hasNumber ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}`}>
+      <p className={`flex items-center transition-colors ${hasNumber ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-300'}`}>
         <CheckIcon className="w-3.5 h-3.5 mr-2" />
         Minimal 1 angka
       </p>
@@ -161,15 +163,15 @@ const Auth: React.FC = () => {
             <>
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Selamat Datang Kembali</h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">Masuk untuk melanjutkan</p>
+                <p className="text-slate-500 dark:text-slate-300 mt-1">Masuk untuk melanjutkan</p>
               </div>
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="email">Alamat Email</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="email">Alamat Email</label>
                   <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="password">Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="password">Password</label>
                   <div className="relative"><input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 pr-10 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 dark:text-slate-400">{showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}</button></div>
                 </div>
                 {error && <p className="text-red-500 text-sm text-center pt-2">{error}</p>}
@@ -179,7 +181,7 @@ const Auth: React.FC = () => {
               <div className="text-center mt-6 space-y-2">
                 <button onClick={() => switchView('signup')} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">Belum punya akun? Daftar</button>
                 <br/>
-                <button onClick={() => switchView('forgotPassword')} className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:underline">Lupa password?</button>
+                <button onClick={() => switchView('forgotPassword')} className="text-sm font-semibold text-slate-500 dark:text-slate-300 hover:underline">Lupa password?</button>
               </div>
             </>
           )}
@@ -188,21 +190,21 @@ const Auth: React.FC = () => {
              <>
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Buat Akun Baru</h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">Mulai atur tugas Anda</p>
+                <p className="text-slate-500 dark:text-slate-300 mt-1">Mulai atur tugas Anda</p>
               </div>
               <form onSubmit={handleSignupSubmit} className="space-y-4">
                  {message && <p className="text-green-500 text-sm text-center pb-2">{message}</p>}
                  {error && <p className="text-red-500 text-sm text-center pb-2">{error}</p>}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="username">Nama Lengkap</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="username">Nama Lengkap</label>
                   <input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="email">Alamat Email</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="email">Alamat Email</label>
                   <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="password">Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="password">Password</label>
                   <div className="relative"><input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 pr-10 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 dark:text-slate-400">{showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}</button></div>
                   {password.length > 0 && renderPasswordValidation()}
                 </div>
@@ -218,7 +220,7 @@ const Auth: React.FC = () => {
             <>
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Reset Password</h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-slate-500 dark:text-slate-300 mt-1">
                     {forgotPasswordSuccess ? 'Tautan Terkirim!' : 'Masukkan email Anda untuk menerima tautan reset.'}
                 </p>
               </div>
@@ -231,14 +233,14 @@ const Auth: React.FC = () => {
                 <>
                     <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
                         <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="email">Alamat Email</label>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="email">Alamat Email</label>
                         <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
                         <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 disabled:bg-slate-400">{loading ? 'Mengirim...' : 'Kirim Tautan'}</button>
                     </form>
                     <div className="text-center mt-6">
-                        <button onClick={() => switchView('login')} className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:underline">Kembali ke halaman Masuk</button>
+                        <button onClick={() => switchView('login')} className="text-sm font-semibold text-slate-500 dark:text-slate-300 hover:underline">Kembali ke halaman Masuk</button>
                     </div>
                 </>
               )}
@@ -249,7 +251,7 @@ const Auth: React.FC = () => {
             <>
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Buat Password Baru</h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-slate-500 dark:text-slate-300 mt-1">
                     {updatePasswordSuccess ? 'Berhasil!' : 'Masukkan password baru yang aman.'}
                 </p>
               </div>
@@ -273,7 +275,7 @@ const Auth: React.FC = () => {
               ) : (
                 <form onSubmit={handleUpdatePasswordSubmit} className="space-y-4">
                     <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="password">Password Baru</label>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="password">Password Baru</label>
                     <div className="relative"><input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 pr-10 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 dark:text-slate-400">{showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}</button></div>
                     {password.length > 0 && renderPasswordValidation()}
                     </div>

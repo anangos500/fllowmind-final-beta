@@ -32,7 +32,7 @@ const ToggleSwitch: React.FC<{
     >
         <div>
             <h4 className="font-semibold text-slate-800 dark:text-slate-200">{label}</h4>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-300">{description}</p>
         </div>
         <button
             onClick={() => onChange(!enabled)}
@@ -107,16 +107,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, profile, onUpdateProf
     <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <header className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Pengaturan</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Kelola preferensi akun dan aplikasi Anda.</p>
+        <p className="text-slate-500 dark:text-slate-300 mt-1">Kelola preferensi akun dan aplikasi Anda.</p>
       </header>
 
       <div className="space-y-8">
         {/* Account Section */}
         <section>
-          <h2 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">Akun</h2>
+          <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">Akun</h2>
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center">
-              <span className="font-semibold text-slate-600 dark:text-slate-300 mb-2 sm:mb-0">Alamat Email</span>
+              <span className="font-semibold text-slate-600 dark:text-slate-200 mb-2 sm:mb-0">Alamat Email</span>
               <span className="font-medium text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-md">{user.email}</span>
             </div>
           </div>
@@ -124,7 +124,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, profile, onUpdateProf
         
         {/* Notification Settings Section */}
         <section>
-          <h2 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">Notifikasi Fokus</h2>
+          <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">Notifikasi Fokus</h2>
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm space-y-4">
             <div>
                 <ToggleSwitch

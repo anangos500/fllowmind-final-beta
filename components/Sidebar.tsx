@@ -44,7 +44,7 @@ const NavItem: React.FC<{
     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
       isActive
         ? 'bg-blue-600 text-white shadow-lg'
-        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200'
+        : 'text-slate-500 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100'
     }`}
   >
     {React.cloneElement(icon, { className: 'w-6 h-6' })}
@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
                 <div className="space-y-4">
                     {user && (
                         <div className="p-3 bg-slate-200 dark:bg-slate-700 rounded-lg">
-                            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 truncate text-center" title={user.email || ''}>
+                            <p className="text-sm font-medium text-slate-600 dark:text-slate-200 truncate text-center" title={user.email || ''}>
                                 {user.email}
                             </p>
                         </div>
@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
                     <div className="flex items-center space-x-2">
                         <button 
                             onClick={onLogoutRequest}
-                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
                         >
                             <LogoutIcon className="w-6 h-6" />
                             <span className="font-semibold">Keluar</span>
@@ -121,19 +121,19 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
                         <button 
                             onClick={toggleTheme}
                             aria-label="Toggle theme"
-                            className="p-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                            className="p-3 rounded-lg text-slate-500 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
                         >
                             {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
                         </button>
                     </div>
                     <div className="flex justify-center items-center space-x-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <a href="https://www.tiktok.com/@aos_2110" target="_blank" rel="noopener noreferrer" aria-label="Tiktok" className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        <a href="https://www.tiktok.com/@aos_2110" target="_blank" rel="noopener noreferrer" aria-label="Tiktok" className="text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                             <TiktokIcon className="w-5 h-5" />
                         </a>
-                        <a href="https://www.threads.net/@aospheree.ai" target="_blank" rel="noopener noreferrer" aria-label="Threads" className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        <a href="https://www.threads.net/@aospheree.ai" target="_blank" rel="noopener noreferrer" aria-label="Threads" className="text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                             <ThreadsIcon className="w-5 h-5" />
                         </a>
-                        <a href="https://www.instagram.com/aospheree.ai/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        <a href="https://www.instagram.com/aospheree.ai/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                             <InstagramIcon className="w-5 h-5" />
                         </a>
                     </div>

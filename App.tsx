@@ -104,7 +104,8 @@ const AppContent: React.FC = () => {
       if (sessionStorage.getItem('flowmind-permission-wizard-dismissed') || showTour) {
         return;
       }
-      if (notificationPermission === 'default' || micPermission === 'default' || micPermission === 'prompt') {
+      // FIX: Check for 'prompt' for notification permission as the hook now normalizes 'default' to 'prompt'.
+      if (notificationPermission === 'prompt' || micPermission === 'default' || micPermission === 'prompt') {
         wizardTimer = window.setTimeout(() => setShowPermissionWizard(true), 1500);
       }
     };

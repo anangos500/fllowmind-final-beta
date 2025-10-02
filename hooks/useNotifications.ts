@@ -1,36 +1,54 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Task, TaskStatus } from '../types';
 
-type NotificationPermission = 'default' | 'granted' | 'denied';
-
 const NOTIFICATION_CHECK_INTERVAL = 60000; // 1 minute
 const REMINDER_THRESHOLD = 15 * 60 * 1000; // 15 minutes
 
 export const useNotifications = (tasks: Task[]) => {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  // Gunakan PermissionState yang lebih luas yang mencakup 'prompt'
+  const [permission, setPermission] = useState<PermissionState>('prompt');
   const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     // Menggunakan suara baru yang lebih melodis sesuai permintaan pengguna.
-    const sound = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjIwLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-CQAEAC4A75990AAAAANIAAAEAAAD0QAAAQAAMQ==';
+    const sound = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjIwLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-CQAEAC4A75990AAAAANIAAAEAAAD0QAAAQAAMQ==';
     notificationAudioRef.current = new Audio(sound);
   }, []);
 
+  // Mengganti polling dengan Permissions API yang modern untuk keandalan.
   useEffect(() => {
-    if (!('Notification' in window)) return;
-
-    // Periksa status izin secara berkala karena tidak ada event 'onchange' standar
-    const intervalId = setInterval(() => {
-      if (Notification.permission !== permission) {
-        setPermission(Notification.permission as NotificationPermission);
+    // Periksa apakah Permissions API didukung.
+    if (!('Notification' in window) || !navigator.permissions) {
+      // Fallback untuk browser lama atau lingkungan yang tidak aman.
+      if ('Notification' in window) {
+        // FIX: Normalisasi 'default' ke 'prompt' agar sesuai dengan Permissions API
+        const legacyPermission = Notification.permission;
+        setPermission(legacyPermission === 'default' ? 'prompt' : legacyPermission);
+      } else {
+        setPermission('denied');
       }
-    }, 1000); // Periksa setiap detik
+      return;
+    }
 
-    // Atur status awal saat komponen dimuat
-    setPermission(Notification.permission as NotificationPermission);
-
-    return () => clearInterval(intervalId); // Bersihkan interval saat komponen dilepas
-  }, [permission]);
+    const checkPermission = async () => {
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'notifications' as PermissionName });
+        setPermission(permissionStatus.state);
+        // Dengarkan perubahan status izin.
+        permissionStatus.onchange = () => {
+          setPermission(permissionStatus.state);
+        };
+      } catch (err) {
+        console.error("Tidak dapat menanyakan izin notifikasi:", err);
+        // Jika query gagal (misalnya di Firefox), kembali ke API yang lebih lama.
+        // FIX: Normalisasi 'default' ke 'prompt' agar sesuai dengan Permissions API
+        const legacyPermission = Notification.permission;
+        setPermission(legacyPermission === 'default' ? 'prompt' : legacyPermission);
+      }
+    };
+    
+    checkPermission();
+  }, []); // Jalankan sekali saat komponen dimuat.
 
   const requestPermission = useCallback(() => {
     if (!('Notification' in window)) {
@@ -39,7 +57,10 @@ export const useNotifications = (tasks: Task[]) => {
     }
 
     Notification.requestPermission().then(result => {
-      setPermission(result);
+      // Listener onchange harus menangani pembaruan, tetapi kita atur di sini
+      // untuk umpan balik langsung jika listener gagal.
+      // FIX: Normalisasi 'default' ke 'prompt' agar sesuai dengan Permissions API
+      setPermission(result === 'default' ? 'prompt' : result);
     });
   }, []);
 
@@ -85,5 +106,6 @@ export const useNotifications = (tasks: Task[]) => {
     return () => clearInterval(intervalId);
   }, [tasks, permission]);
 
+  // Hook sekarang mengembalikan PermissionState.
   return { notificationPermission: permission, requestNotificationPermission: requestPermission };
 };

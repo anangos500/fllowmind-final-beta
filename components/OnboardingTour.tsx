@@ -17,19 +17,25 @@ const TOUR_STEPS = [
   {
     selector: '[data-tour-id="sidebar-nav"]',
     title: 'Navigasi Mudah',
-    content: 'Gunakan sidebar ini untuk beralih antar tampilan: Hari Ini, Terlewat, Mingguan, Bulanan, dan Jurnal.',
+    content: 'Gunakan sidebar ini untuk beralih antar tampilan: Hari Ini, Terlewat, Mingguan, Bulanan, Jurnal, dan Pengaturan.',
+    position: 'right',
+  },
+  {
+    selector: '[data-tour-id="overdue-nav"]',
+    title: 'Akses Tugas Terlewat',
+    content: 'Klik di sini untuk melihat semua tugas yang telah melewati batas waktu dan belum selesai.',
     position: 'right',
   },
   {
     selector: '[data-tour-id="overdue-move-button"]',
-    title: 'Pindahkan Tugas Terlewat',
-    content: 'Tugas yang terlewat akan muncul di sini. Klik tombol ini untuk memindahkannya dengan mudah ke hari ini, besok, atau lusa.',
+    title: 'Kelola Tugas Terlewat',
+    content: 'Di halaman ini, Anda akan menemukan semua tugas dari hari-hari sebelumnya yang belum selesai. Gunakan tombol "Pindahkan Semua" untuk menjadwalkan ulang semuanya dengan cepat.',
     position: 'bottom',
   },
   {
     selector: '[data-tour-id="smart-add-task"]',
     title: 'Tambah Tugas dengan AI',
-    content: 'Ketik permintaan dalam bahasa alami di sini, seperti "Rapat dengan tim desain besok jam 2 siang", dan AI kami akan menjadwalkannya.',
+    content: 'Ketik permintaan dalam bahasa alami di sini, atau klik ikon mikrofon untuk mendiktekannya. Contohnya, "Rapat dengan tim desain besok jam 2 siang", dan AI kami akan menjadwalkannya.',
     position: 'bottom',
   },
   {
@@ -39,16 +45,16 @@ const TOUR_STEPS = [
     position: 'top',
   },
   {
-    selector: '[data-tour-id="add-task-button"]',
-    title: 'Tambah Tugas Manual',
-    content: 'Atau, klik tombol ini untuk menambahkan tugas baru secara manual kapan saja.',
-    position: 'left',
+    selector: '[data-tour-id="weekly-nav"]',
+    title: 'Tinjauan Mingguan',
+    content: 'Lihat semua tugas Anda dalam seminggu. Di desktop, klik pada satu hari untuk melihat detail tugas hari itu di bawahnya.',
+    position: 'right',
   },
   {
-    selector: '[data-tour-id="ai-assistant-button"]',
-    title: 'Asisten AI Cerdas',
-    content: 'Bingung? Klik di sini untuk bertanya pada asisten AI kami tentang fitur aplikasi.',
-    position: 'left',
+    selector: '[data-tour-id="monthly-nav"]',
+    title: 'Tinjauan Bulanan',
+    content: 'Dapatkan gambaran besar dengan kalender bulanan. Lihat statistik produktivitas Anda dan klik pada tanggal mana pun untuk melihat tugas-tugasnya.',
+    position: 'right',
   },
   {
     selector: '[data-tour-id="journal-nav"]',
@@ -57,12 +63,31 @@ const TOUR_STEPS = [
     position: 'right',
   },
   {
+    selector: '[data-tour-id="settings-nav"]',
+    title: 'Personalisasi Pengalaman Anda',
+    content: 'Di sini Anda dapat menyesuaikan suara notifikasi, mengelola detail akun, dan mengatur preferensi aplikasi Anda.',
+    position: 'right',
+  },
+  {
+    selector: '[data-tour-id="ai-assistant-button"]',
+    title: 'Asisten AI Cerdas',
+    content: 'Bingung? Klik di sini untuk bertanya pada asisten AI kami tentang fitur aplikasi.',
+    position: 'left',
+  },
+  {
+    selector: '[data-tour-id="add-task-button"]',
+    title: 'Tambah Tugas Manual',
+    content: 'Atau, klik tombol ini untuk menambahkan tugas baru secara manual kapan saja.',
+    position: 'left',
+  },
+  {
     selector: null,
     title: 'Anda Siap!',
     content: 'Sekarang Anda sudah mengetahui dasar-dasarnya. Selamat menikmati pengalaman merencanakan yang lebih cerdas!',
     position: 'center',
   },
 ];
+
 
 const OnboardingTour: React.FC<OnboardingTourProps> = ({ onClose, onStepChange }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -105,7 +130,11 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onClose, onStepChange }
     const targetSelector = step.selector;
 
     if (!targetSelector) {
-      setHighlightStyle({ width: 0, height: 0 });
+      setHighlightStyle({
+        width: 0,
+        height: 0,
+        boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.7)',
+      });
       setTooltipStyle({});
       return;
     }
@@ -131,6 +160,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onClose, onStepChange }
             height: rect.height + padding,
             top: rect.top - padding / 2,
             left: rect.left - padding / 2,
+            boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.7)',
           });
   
           const tooltipEl = document.getElementById('tour-tooltip');
@@ -212,7 +242,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onClose, onStepChange }
         style={{
           ...highlightStyle,
           borderRadius: '12px',
-          boxShadow: isCentered ? 'none' : '0 0 0 9999px rgba(15, 23, 42, 0.7)',
         }}
       ></div>
 

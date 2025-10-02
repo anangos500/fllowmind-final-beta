@@ -44,7 +44,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </button>
         </header>
         <main className="p-6">
-          <p className="text-slate-600 dark:text-slate-300 text-center">{message}</p>
+          <p className="text-slate-600 dark:text-slate-200 text-center">{message}</p>
         </main>
         <footer className="p-5 bg-slate-50 dark:bg-slate-800/50 border-t dark:border-slate-700 flex justify-center space-x-3">
           <button

@@ -1,15 +1,8 @@
-
-
-
-
-
-
 import React from 'react';
 import CalendarIcon from './icons/CalendarIcon';
 import SunIcon from './icons/SunIcon';
 import BarChartIcon from './icons/BarChartIcon';
 import { View } from '../types';
-import BellIcon from './icons/BellIcon';
 import { useAuth } from '../contexts/AuthContext';
 import LogoutIcon from './icons/LogoutIcon';
 import BookOpenIcon from './icons/BookOpenIcon';
@@ -26,8 +19,6 @@ import SettingsIcon from './icons/SettingsIcon';
 interface SidebarProps {
   currentView: View;
   onViewChange: (view: View) => void;
-  notificationPermission: 'default' | 'granted' | 'denied';
-  requestNotificationPermission: () => void;
   onLogoutRequest: () => void;
   isOpen: boolean;
   onClose: () => void;
@@ -52,7 +43,7 @@ const NavItem: React.FC<{
   </button>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificationPermission, requestNotificationPermission, onLogoutRequest, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, onLogoutRequest, isOpen, onClose }) => {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
 
@@ -100,15 +91,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
                                 {user.email}
                             </p>
                         </div>
-                    )}
-                    {notificationPermission !== 'granted' && (
-                        <button 
-                            onClick={requestNotificationPermission}
-                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-500 dark:text-amber-200 bg-amber-100 dark:bg-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-800/80 transition-colors"
-                        >
-                            <BellIcon className="w-6 h-6" />
-                            <span className="font-semibold text-sm">Aktifkan Notifikasi</span>
-                        </button>
                     )}
                     <div className="flex items-center space-x-2">
                         <button 

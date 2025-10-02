@@ -72,7 +72,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
   };
 
   const chartTheme = {
-    textColor: theme === 'dark' ? '#94a3b8' : '#64748b',
+    textColor: theme === 'dark' ? '#e2e8f0' : '#64748b',
     gridColor: theme === 'dark' ? '#334155' : '#e2e8f0',
   };
 
@@ -81,18 +81,18 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
       <header className="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
         <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Tinjauan Bulanan</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Kalender dan statistik produktivitas.</p>
+            <p className="text-slate-500 dark:text-slate-200 mt-1">Kalender dan statistik produktivitas.</p>
         </div>
         <div className="flex items-center bg-white dark:bg-slate-800 shadow-sm rounded-lg p-1 self-start sm:self-center">
           <button onClick={() => changeMonth(-1)} className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5"/></button>
-          <span className="w-36 sm:w-48 text-center font-semibold text-slate-700 dark:text-slate-300">{currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
+          <span className="w-36 sm:w-48 text-center font-semibold text-slate-700 dark:text-slate-200">{currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
           <button onClick={() => changeMonth(1)} className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5"/></button>
         </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-2 sm:p-4 rounded-xl shadow-sm">
-          <div className="grid grid-cols-7 text-center font-semibold text-slate-500 dark:text-slate-400 text-xs sm:text-sm mb-2">
+          <div className="grid grid-cols-7 text-center font-semibold text-slate-500 dark:text-slate-200 text-xs sm:text-sm mb-2">
             {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map(day => <div key={day}>{day}</div>)}
           </div>
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
@@ -113,7 +113,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
                   onClick={() => setSelectedDay(day)}
                   className={`h-20 sm:h-28 p-1.5 sm:p-2 border dark:border-slate-700 rounded-lg flex flex-col transition-all duration-200 cursor-pointer ${isToday ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-400 dark:border-blue-700' : 'bg-white dark:bg-slate-800'} ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}
                 >
-                  <span className={`font-semibold text-sm sm:text-base ${isToday ? 'text-blue-600 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300'}`}>{day}</span>
+                  <span className={`font-semibold text-sm sm:text-base ${isToday ? 'text-blue-600 dark:text-blue-300' : 'text-slate-700 dark:text-slate-200'}`}>{day}</span>
                   <div className="mt-1 space-y-1 flex-grow overflow-hidden text-xs">
                     {completedTasks.slice(0, 2).map(task => (
                       <div key={task.id} className="hidden sm:flex items-center text-green-800 dark:text-green-300 bg-green-100 dark:bg-green-900/50 p-1 rounded" title={task.title}>
@@ -136,7 +136,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
                     )}
 
                     {completedTasks.length > 2 && (
-                         <div className="text-slate-500 dark:text-slate-400 mt-1 hidden sm:block">
+                         <div className="text-slate-500 dark:text-slate-200 mt-1 hidden sm:block">
                             + {completedTasks.length - 2} lagi
                         </div>
                     )}
@@ -154,7 +154,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
                   <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                     Tugas untuk {new Date(year, month, selectedDay).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}
                   </h3>
-                  <button onClick={() => setSelectedDay(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                  <button onClick={() => setSelectedDay(null)} className="p-1 text-slate-400 dark:text-slate-200 hover:text-slate-600 dark:hover:text-slate-100 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
                     <XIcon className="w-5 h-5" />
                   </button>
                 </div>
@@ -165,7 +165,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
                         <span className={`w-2.5 h-2.5 mt-1.5 rounded-full flex-shrink-0 ${task.status === TaskStatus.Done ? 'bg-green-500' : 'bg-slate-400'}`}></span>
                         <div>
                           <p className={`font-medium ${task.status === TaskStatus.Done ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>{task.title}</p>
-                          <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          <div className="flex items-center text-xs text-slate-500 dark:text-slate-200 mt-1">
                             <ClockIcon className="w-3 h-3 mr-1.5" />
                             <span>{new Date(task.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')} - {new Date(task.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')}</span>
                           </div>
@@ -174,7 +174,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-slate-500 dark:text-slate-400 py-4">Tidak ada tugas yang dijadwalkan untuk hari ini.</p>
+                  <p className="text-center text-slate-500 dark:text-slate-200 py-4">Tidak ada tugas yang dijadwalkan untuk hari ini.</p>
                 )}
               </div>
             )}
@@ -182,7 +182,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ tasks }) => {
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Statistik Bulan Ini</h3>
               <div className="space-y-4">
                 <div className="flex justify-between p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                    <span className="font-semibold text-slate-600 dark:text-slate-300">Total Tugas</span>
+                    <span className="font-semibold text-slate-600 dark:text-slate-200">Total Tugas</span>
                     <span className="font-bold text-slate-800 dark:text-slate-100">{stats.total}</span>
                 </div>
                 <div className="flex justify-between p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">

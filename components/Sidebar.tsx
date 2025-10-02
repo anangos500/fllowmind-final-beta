@@ -2,6 +2,8 @@
 
 
 
+
+
 import React from 'react';
 import CalendarIcon from './icons/CalendarIcon';
 import SunIcon from './icons/SunIcon';
@@ -74,13 +76,21 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
 
                 <nav className="space-y-3 flex-grow" data-tour-id="sidebar-nav">
                     <NavItem icon={<SunIcon />} label="Hari Ini" isActive={currentView === 'daily'} onClick={() => onViewChange('daily')} />
-                    <NavItem icon={<AlertTriangleIcon />} label="Tugas Terlewat" isActive={currentView === 'overdue'} onClick={() => onViewChange('overdue')} />
-                    <NavItem icon={<CalendarIcon />} label="Mingguan" isActive={currentView === 'weekly'} onClick={() => onViewChange('weekly')} />
-                    <NavItem icon={<BarChartIcon />} label="Bulanan" isActive={currentView === 'monthly'} onClick={() => onViewChange('monthly')} />
+                    <div data-tour-id="overdue-nav">
+                        <NavItem icon={<AlertTriangleIcon />} label="Tugas Terlewat" isActive={currentView === 'overdue'} onClick={() => onViewChange('overdue')} />
+                    </div>
+                    <div data-tour-id="weekly-nav">
+                        <NavItem icon={<CalendarIcon />} label="Mingguan" isActive={currentView === 'weekly'} onClick={() => onViewChange('weekly')} />
+                    </div>
+                    <div data-tour-id="monthly-nav">
+                        <NavItem icon={<BarChartIcon />} label="Bulanan" isActive={currentView === 'monthly'} onClick={() => onViewChange('monthly')} />
+                    </div>
                     <div data-tour-id="journal-nav">
                         <NavItem icon={<BookOpenIcon />} label="Jurnal" isActive={currentView === 'journal'} onClick={() => onViewChange('journal')} />
                     </div>
-                    <NavItem icon={<SettingsIcon />} label="Pengaturan" isActive={currentView === 'settings'} onClick={() => onViewChange('settings')} />
+                    <div data-tour-id="settings-nav">
+                        <NavItem icon={<SettingsIcon />} label="Pengaturan" isActive={currentView === 'settings'} onClick={() => onViewChange('settings')} />
+                    </div>
                 </nav>
 
                 <div className="space-y-4">

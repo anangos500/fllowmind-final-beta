@@ -44,7 +44,7 @@ const InstallPwaPrompt: React.FC<InstallPwaPromptProps> = ({ isVisible, isIos, o
       <DownloadCloudIcon className="w-6 h-6 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
       <div className="flex-grow">
         <p className="font-semibold text-slate-800 dark:text-slate-200">Instal Flowmind</p>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Dapatkan pengalaman yang lebih cepat dan bebas gangguan.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Dapatkan pengalaman yang lebih cepat dan bebas gangguan (klik instal, proses tidak sampai 1 menit!).</p>
       </div>
       <button
         onClick={onInstall}

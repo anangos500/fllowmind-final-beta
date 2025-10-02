@@ -7,6 +7,11 @@
 
 
 
+
+
+
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import DailyView from './components/DailyView';
@@ -161,17 +166,34 @@ const AppContent: React.FC = () => {
   }, [startFocusSession]);
 
   const handleTourStepChange = useCallback((stepIndex: number) => {
-    // The overdue step is at index 2
-    if (stepIndex === 2) {
-      setCurrentView('overdue');
-    } else {
-      setCurrentView('daily');
+    switch (stepIndex) {
+      case 2: // Overdue Nav
+      case 3: // Overdue View
+        setCurrentView('overdue');
+        break;
+      case 6: // Weekly View
+        setCurrentView('weekly');
+        break;
+      case 7: // Monthly View
+        setCurrentView('monthly');
+        break;
+      case 8: // Journal View
+        setCurrentView('journal');
+        break;
+      case 9: // Settings View
+      case 10: // AI Assistant (keep on settings view)
+      case 11: // Manual Add (keep on settings view)
+        setCurrentView('settings');
+        break;
+      default: // All other steps on Daily view
+        setCurrentView('daily');
+        break;
     }
-
-    // Sidebar steps are at index 1 (Navigasi Mudah) and 7 (Jurnal)
-    const sidebarSteps = [1, 7]; 
+  
+    // Sidebar steps: Sidebar Nav, Overdue Nav, Weekly, Monthly, Journal, Settings
+    const sidebarSteps = [1, 2, 6, 7, 8, 9];
     const isMobile = window.innerWidth < 1024;
-
+  
     if (isMobile) {
       if (sidebarSteps.includes(stepIndex)) {
         setIsSidebarOpen(true);

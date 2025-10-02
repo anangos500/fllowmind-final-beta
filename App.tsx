@@ -1,324 +1,470 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Task, TaskStatus, Recurrence } from '../types';
-import SparklesIcon from './icons/SparklesIcon';
-import MicIcon from './icons/MicIcon';
-import LoaderIcon from './icons/LoaderIcon';
-import ConfirmationModal from './ConfirmationModal';
-import AiConflictResolutionModal from './AiConflictResolutionModal';
+import React, { useState, useCallback, useEffect } from 'react';
+import Sidebar from './components/Sidebar';
+import DailyView from './components/DailyView';
+import WeeklyView from './components/WeeklyView';
+import MonthlyView from './components/MonthlyView';
+import JournalView from './components/JournalView';
+import AddTaskModal from './components/AddTaskModal';
+import TaskDetailModal from './components/TaskDetailModal';
+import FocusMode from './components/FocusMode';
+import PlusIcon from './components/icons/PlusIcon';
+import { useTasks } from './hooks/useTasks';
+import { useJournals } from './hooks/useJournals';
+import { View, Task, TaskStatus, Recurrence } from './types';
+import { useNotifications } from './hooks/useNotifications';
+import { FocusTimerProvider, useFocusTimer } from './contexts/FocusTimerContext';
+import FloatingFocusWidget from './components/FloatingFocusWidget';
+import { useAuth } from './contexts/AuthContext';
+import Auth from './components/Auth';
+import OverdueView from './components/OverdueView';
+import OnboardingTour from './components/OnboardingTour';
+import MenuIcon from './components/icons/MenuIcon';
+import FlowmindIcon from './components/icons/FlowmindIcon';
+import AiAssistant from './components/AiAssistant';
+import SparklesBotIcon from './components/icons/SparklesBotIcon';
+import ConfirmationModal from './components/ConfirmationModal';
+import { usePwaInstall } from './hooks/usePwaInstall';
+import InstallPwaPrompt from './components/InstallPwaPrompt';
+import PermissionWizard from './components/PermissionWizard';
+import SettingsView from './components/SettingsView';
+import DeleteAccountModal from './components/DeleteAccountModal';
+import DeleteSuccessModal from './components/DeleteSuccessModal';
 
-// FIX: Add TypeScript definitions for the Web Speech API to resolve compilation errors.
-// These interfaces describe the properties and methods used for voice command recognition,
-// as they are not standard in all TypeScript DOM libraries.
-interface SpeechRecognitionEvent extends Event {
-  readonly resultIndex: number;
-  readonly results: SpeechRecognitionResultList;
-}
 
-interface SpeechRecognitionResultList {
-  readonly length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
+const AppContent: React.FC = () => {
+  const [currentView, setCurrentView] = useState<View>(() => {
+    const savedView = localStorage.getItem('flowmind-currentView') as View;
+    const validViews: View[] = ['daily', 'overdue', 'weekly', 'monthly', 'journal', 'settings'];
+    return savedView && validViews.includes(savedView) ? savedView : 'daily';
+  });
 
-interface SpeechRecognitionResult {
-  readonly isFinal: boolean;
-  readonly length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-}
+  const { tasks, addTask, updateTask, deleteTask, bulkDeleteTasks, bulkUpdateTasks, loading: tasksLoading, error: tasksError } = useTasks();
+  const { journals, loading: journalsLoading, error: journalsError, createOrUpdateJournal, downloadJournal, deleteJournal } = useJournals();
+  const { notificationPermission, requestNotificationPermission } = useNotifications(tasks);
+  const { session, signOut, profile, updateUserProfile } = useAuth();
+  
+  const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showTour, setShowTour] = useState(false);
+  const [tourFakeTask, setTourFakeTask] = useState<Task | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [initialTaskData, setInitialTaskData] = useState<Omit<Task, 'id' | 'createdAt' | 'userId'> | null>(null);
+  const { installPrompt, triggerInstall } = usePwaInstall();
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const [showPermissionWizard, setShowPermissionWizard] = useState(false);
+  const [isDeleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
-interface SpeechRecognitionAlternative {
-  readonly transcript: string;
-}
 
-interface SpeechRecognitionErrorEvent extends Event {
-  readonly error: string;
-}
+  // Simpan tampilan saat ini ke localStorage setiap kali berubah
+  useEffect(() => {
+    localStorage.setItem('flowmind-currentView', currentView);
+  }, [currentView]);
 
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
-  onend: () => void;
-}
+  // Menampilkan panduan izin (Permission Wizard) saat pertama kali masuk
+  useEffect(() => {
+    // Timer untuk menunda wizard agar tidak terlalu mengganggu
+    let wizardTimer: number | undefined;
 
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
-
-interface SmartAddTaskProps {
-  onAddTask: (task: Omit<Task, 'id' | 'createdAt' | 'userId'>) => void;
-  tasks: Task[];
-  onOpenManualAdd: (taskData: Omit<Task, 'id' | 'createdAt' | 'userId'>) => void;
-}
-
-const findAvailableSlots = (taskDurationMs: number, targetDate: Date, existingTasksOnDay: Task[]) => {
-    const dayStart = new Date(targetDate);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(targetDate);
-    dayEnd.setHours(23, 59, 59, 999);
-    const isToday = targetDate.toDateString() === new Date().toDateString();
-    const searchStartBoundary = isToday ? new Date().getTime() : dayStart.getTime();
-    let busyPeriods = [
-        { start: dayStart.getTime(), end: searchStartBoundary },
-        ...existingTasksOnDay.map(t => ({
-            start: new Date(t.startTime).getTime(),
-            end: new Date(t.endTime).getTime(),
-        }))
-    ];
-    busyPeriods.sort((a, b) => a.start - b.start);
-    const mergedBusyPeriods: { start: number; end: number }[] = [];
-    if (busyPeriods.length > 0) {
-        let currentMerge = { ...busyPeriods[0] };
-        for (let i = 1; i < busyPeriods.length; i++) {
-            const nextPeriod = busyPeriods[i];
-            if (nextPeriod.start <= currentMerge.end) {
-                currentMerge.end = Math.max(currentMerge.end, nextPeriod.end);
-            } else {
-                mergedBusyPeriods.push(currentMerge);
-                currentMerge = { ...nextPeriod };
-            }
-        }
-        mergedBusyPeriods.push(currentMerge);
-    }
-    const suggestions: { startTime: string; endTime: string }[] = [];
-    let lastBusyEnd = mergedBusyPeriods.length > 0 ? mergedBusyPeriods[0].end : searchStartBoundary;
-    const finalBusyBlocks = [...mergedBusyPeriods, { start: dayEnd.getTime() + 1, end: dayEnd.getTime() + 1 }];
-    for (const period of finalBusyBlocks) {
-        const gapStart = lastBusyEnd;
-        const gapEnd = period.start;
-        const gapDuration = gapEnd - gapStart;
-        if (gapDuration >= taskDurationMs) {
-            suggestions.push({
-                startTime: new Date(gapStart).toISOString(),
-                endTime: new Date(gapStart + taskDurationMs).toISOString(),
-            });
-        }
-        lastBusyEnd = Math.max(lastBusyEnd, period.end);
-    }
-    return suggestions;
-};
-
-const SmartAddTask: React.FC<SmartAddTaskProps> = ({ onAddTask, tasks, onOpenManualAdd }) => {
-  const [inputValue, setInputValue] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [showRetryModal, setShowRetryModal] = useState(false);
-  const [conflictingTask, setConflictingTask] = useState<{ title: string; startTime: string; endTime: string } | null>(null);
-  const [suggestedSlots, setSuggestedSlots] = useState<{ startTime: string; endTime: string }[]>([]);
-  const [isConflictModalOpen, setConflictModalOpen] = useState(false);
-
-  // State for voice commands
-  const [isListening, setIsListening] = useState(false);
-  const [speechError, setSpeechError] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const autoSubmitTimerRef = useRef<number | null>(null);
-
-  const handleAiRequest = useCallback(async (command?: string) => {
-    const textToSubmit = command || inputValue;
-    if (!textToSubmit.trim()) return;
-
-    setIsAiLoading(true);
-    setShowRetryModal(false);
-    if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
-    
-    // Stop listening if it was active
-    if (isListening) {
-        setIsListening(false);
-    }
-
-    try {
-      const currentDate = new Date().toISOString();
-      const prompt = `Anda adalah asisten cerdas yang tugasnya mengubah permintaan bahasa alami menjadi satu atau beberapa tugas dalam format JSON.
-- **Tanggal & Waktu Saat Ini (UTC):** ${currentDate}
-- **Aturan Penting:**
-  - Waktu yang dimasukkan pengguna (misalnya, "besok jam 3 sore") ada di zona waktu **WIB (UTC+7)**.
-  - Anda HARUS mengonversi waktu pengguna dari WIB ke UTC.
-  - Output \`startTime\` dan \`endTime\` HARUS dalam format string **ISO 8601 UTC** (diakhiri dengan 'Z').
-- Jika tidak ada durasi atau waktu berakhir, asumsikan durasi 1 jam.
-- Jika durasi eksplisit disebutkan (misalnya, "rapat selama 2 jam" atau "dari jam 2 sampai jam 4"), Anda HARUS menggunakan durasi tersebut untuk menghitung endTime.
-- Jika tahun tidak disebutkan, asumsikan tahun ini berdasarkan tanggal saat ini.
-- Selalu kembalikan array JSON, bahkan jika hanya ada satu tugas.
-**Permintaan Pengguna untuk diproses:** "${textToSubmit}"`;
-
-      const response = await fetch('/.netlify/functions/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gemini-2.5-flash', contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema: { type: 'ARRAY', items: { type: 'OBJECT', properties: { title: { type: 'STRING' }, startTime: { type: 'STRING' }, endTime: { type: 'STRING' } }, required: ['title', 'startTime', 'endTime'] } }
-          }
-        })
-      });
-      if (!response.ok) throw new Error('AI service returned an error.');
-      const data = await response.json();
-      const parsedTasks = JSON.parse(data.text.trim());
-      if (!Array.isArray(parsedTasks) || parsedTasks.length === 0) throw new Error('AI tidak mengembalikan tugas yang valid.');
-      let hadConflict = false;
-      const getTasksOnSameDay = (d: Date) => tasks.filter(t => new Date(t.startTime).toDateString() === d.toDateString());
-      for (const p of parsedTasks) {
-        if (!p.title || !p.startTime || !p.endTime) continue;
-        const newStart = new Date(p.startTime), newEnd = new Date(p.endTime);
-        let duration = newEnd.getTime() - newStart.getTime();
-        if (isNaN(duration) || duration < 60000) duration = 3600000;
-        const tasksOnDay = getTasksOnSameDay(newStart);
-        const overlap = tasksOnDay.some(t => newStart < new Date(t.endTime) && new Date(t.startTime) < newEnd);
-        const overdue = newEnd.getTime() < Date.now();
-        if (overlap || overdue) {
-          hadConflict = true;
-          let slots: {startTime: string, endTime: string}[] = [];
-          for (let i = 0; i < 5 && slots.length < 3; i++) {
-            const searchDate = new Date(); searchDate.setHours(0,0,0,0); searchDate.setDate(searchDate.getDate() + i);
-            slots.push(...findAvailableSlots(duration, searchDate, getTasksOnSameDay(searchDate)));
-          }
-          if (slots.length > 0) { setConflictingTask(p); setSuggestedSlots(slots.slice(0,3)); setConflictModalOpen(true); } 
-          else { alert(`Jadwal untuk "${p.title}" bentrok, dan tidak ada slot kosong ditemukan.`); }
-          break;
-        } else {
-          onAddTask({ title: p.title, startTime: newStart.toISOString(), endTime: new Date(newStart.getTime() + duration).toISOString(), status: TaskStatus.ToDo, checklist: [], notes: '', isImportant: false, recurrence: Recurrence.None });
-        }
+    const checkPermissions = async () => {
+      // Jangan tampilkan jika wizard telah ditutup di sesi ini
+      if (sessionStorage.getItem('flowmind-permission-wizard-dismissed')) {
+        return;
       }
-      if (!hadConflict) setInputValue('');
-    } catch (err) { console.error("Error with AI task creation:", err); setShowRetryModal(true); } 
-    finally { setIsAiLoading(false); }
-  }, [inputValue, onAddTask, tasks, isListening]);
+      
+      // KONDISI UTAMA: Jangan tampilkan wizard jika tur orientasi sedang aktif.
+      // Jika showTour benar, kita keluar lebih awal.
+      if (showTour) {
+          return;
+      }
+
+      const notifPerm = Notification.permission;
+      let micPerm = 'prompt';
+      try {
+        // 'microphone' as PermissionName is a type cast for TypeScript
+        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        micPerm = result.state;
+      } catch (e) {
+        console.warn("Could not query microphone permission:", e);
+      }
+      
+      if (notifPerm === 'default' || micPerm === 'prompt') {
+        // Atur timeout untuk menampilkan wizard setelah jeda singkat.
+        wizardTimer = window.setTimeout(() => {
+            setShowPermissionWizard(true);
+        }, 1500);
+      }
+    };
+    
+    // Periksa setelah profil dimuat untuk menghindari menampilkannya di layar auth
+    if (profile) {
+      checkPermissions();
+    }
+    
+    // Fungsi pembersihan: Batalkan timeout jika komponen di-unmount atau dependensi berubah
+    // (misalnya, showTour menjadi true) sebelum timeout selesai. Ini sangat penting
+    // untuk mencegah wizard muncul setelah tur dimulai.
+    return () => {
+      if (wizardTimer) {
+        clearTimeout(wizardTimer);
+      }
+    };
+  }, [profile, showTour]);
+
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSpeechError("Speech recognition not supported in this browser.");
-      return;
+    // Tampilkan tur jika profil pengguna telah dimuat dan flag orientasi adalah false.
+    if (profile && profile.hasCompletedOnboarding === false) {
+      setShowTour(true);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(10, 30, 0, 0);
+
+      const yesterdayEnd = new Date(yesterday.getTime() + 3600000); // 1 hour duration
+      
+      setTourFakeTask({
+        id: 'tour-fake-task-overdue',
+        title: 'Contoh Tugas Terlewat',
+        startTime: yesterday.toISOString(),
+        endTime: yesterdayEnd.toISOString(),
+        status: TaskStatus.ToDo,
+        checklist: [],
+        notes: 'Ini adalah contoh tugas yang sudah melewati batas waktunya.',
+        isImportant: false,
+        recurrence: Recurrence.None,
+        createdAt: yesterday.toISOString(),
+      });
     }
-    if (!recognitionRef.current) {
-      const recognition: SpeechRecognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'id-ID';
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-
-        if (finalTranscript) {
-          setInputValue(prev => (prev + ' ' + finalTranscript.trim()).trim());
-          if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
-          autoSubmitTimerRef.current = window.setTimeout(() => {
-            setInputValue(currentVal => {
-              if (currentVal.trim()) {
-                handleAiRequest(currentVal.trim());
-              }
-              return currentVal;
-            });
-          }, 3000);
-        }
-      };
-
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          setSpeechError(`Speech recognition error: ${event.error}`);
-          setIsListening(false);
-        }
-      };
-
-      recognition.onend = () => {
-        if (isListening) {
-          setIsListening(false);
-        }
-      };
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      recognitionRef.current?.stop();
-      if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
-    };
-  }, [handleAiRequest, isListening]);
+  }, [profile]);
   
   useEffect(() => {
-    if (isListening) {
-      try {
-        setInputValue('');
-        recognitionRef.current?.start();
-      } catch (e) {
-        console.warn("Could not start recognition:", e);
-        setIsListening(false);
-      }
-    } else {
-      recognitionRef.current?.stop();
-    }
-  }, [isListening]);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const hasClosedPrompt = sessionStorage.getItem('flowmind-install-prompt-closed') === 'true';
 
-  const toggleListening = () => {
-    if (isListening) {
-      setIsListening(false);
-    } else {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => {
-          setIsListening(true);
-          setSpeechError(null);
-        })
-        .catch(() => {
-          setSpeechError("Microphone permission denied.");
-        });
+    // Jangan tampilkan jika sudah diinstal atau jika pengguna sudah menutupnya di sesi ini
+    if (isStandalone || hasClosedPrompt) {
+      return;
+    }
+
+    // Hanya mulai timer jika prompt siap (baik event browser atau karena ini iOS)
+    if (installPrompt || isIos) {
+      const timer = setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 5000); // Tampilkan setelah 5 detik
+
+      return () => clearTimeout(timer);
+    }
+  }, [installPrompt, isIos]);
+
+  const { visibility, startFocusSession } = useFocusTimer();
+
+  const handleSelectTask = useCallback((task: Task) => {
+    if (task.id === 'tour-fake-task-overdue') return;
+    setSelectedTask(task);
+  }, []);
+
+  const handleCloseDetailModal = useCallback(() => {
+    setSelectedTask(null);
+  }, []);
+  
+  const handleStartFocus = useCallback((task: Task) => {
+    startFocusSession(task);
+    setSelectedTask(null);
+  }, [startFocusSession]);
+
+  const handleTourStepChange = useCallback((stepIndex: number) => {
+    switch (stepIndex) {
+      case 2: // Overdue Nav
+      case 3: // Overdue View
+        setCurrentView('overdue');
+        break;
+      case 6: // Weekly View
+        setCurrentView('weekly');
+        break;
+      case 7: // Monthly View
+        setCurrentView('monthly');
+        break;
+      case 8: // Journal View
+        setCurrentView('journal');
+        break;
+      case 9: // Settings View
+      case 10: // AI Assistant (keep on settings view)
+      case 11: // Manual Add (keep on settings view)
+        setCurrentView('settings');
+        break;
+      default: // All other steps on Daily view
+        setCurrentView('daily');
+        break;
+    }
+  
+    // Sidebar steps: Sidebar Nav, Overdue Nav, Weekly, Monthly, Journal, Settings
+    const sidebarSteps = [1, 2, 6, 7, 8, 9];
+    const isMobile = window.innerWidth < 1024;
+  
+    if (isMobile) {
+      if (sidebarSteps.includes(stepIndex)) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    }
+  }, []);
+
+  const handleTourClose = () => {
+    setShowTour(false);
+    setTourFakeTask(null);
+    setIsSidebarOpen(false);
+    
+    // Perbarui profil di database untuk menandai tur telah selesai.
+    if (profile && profile.hasCompletedOnboarding === false) {
+        updateUserProfile({ hasCompletedOnboarding: true });
+    }
+  };
+  
+  const handleOpenManualAdd = (taskData: Omit<Task, 'id' | 'createdAt' | 'userId'>) => {
+    setInitialTaskData(taskData);
+    setAddModalOpen(true);
+  };
+
+  const handleRequestMicPermission = async () => {
+    try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+        console.error("Microphone permission denied:", err);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); if (isAiLoading) return; handleAiRequest(); };
-  const handleSlotSelection = (slot: { startTime: string; endTime: string }) => { if (conflictingTask) onAddTask({ title: conflictingTask.title, startTime: slot.startTime, endTime: slot.endTime, status: TaskStatus.ToDo, checklist: [], notes: '', isImportant: false, recurrence: Recurrence.None }); setConflictModalOpen(false); setConflictingTask(null); setSuggestedSlots([]); setInputValue(''); };
-  const handleManualAdd = () => { if (conflictingTask) onOpenManualAdd({ title: conflictingTask.title, startTime: conflictingTask.startTime, endTime: conflictingTask.endTime, status: TaskStatus.ToDo, checklist: [], notes: '', isImportant: false, recurrence: Recurrence.None }); setConflictModalOpen(false); setConflictingTask(null); setSuggestedSlots([]); setInputValue(''); };
+  const handleWizardClose = (skipped: boolean) => {
+    setShowPermissionWizard(false);
+    if (skipped) {
+        sessionStorage.setItem('flowmind-permission-wizard-dismissed', 'true');
+    }
+  };
 
-  let micButtonClass = 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400';
-  if (isListening) {
-    micButtonClass = 'text-red-500 animate-pulse';
-  }
+  const handleSuccessModalClose = () => {
+    setShowDeleteSuccess(false);
+    // Sign out only after the user has acknowledged the success message.
+    signOut();
+  };
 
-  const placeholderText = isListening ? 'Mendengarkan perintah Anda...' : 'Coba: Rapat besok jam 3 dan kirim laporan jam 5';
-  
-  const helperText = isAiLoading 
-    ? 'AI Sedang membuat jadwal Anda...' 
-    : isListening 
-      ? 'Ucapkan perintah Anda, AI akan mengirim otomatis.' 
-      : 'Tekan Enter atau aktifkan mic untuk membuat tugas.';
+  const handleDeleteAccount = async (password: string): Promise<void> => {
+    if (!session) {
+      throw new Error("Sesi tidak ditemukan.");
+    }
+    const response = await fetch('/.netlify/functions/delete-user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ password }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Gagal menghapus akun.');
+    }
+    
+    // Close the password confirmation modal and show the success modal.
+    // The sign out process is deferred until the success modal is closed.
+    setDeleteAccountModalOpen(false);
+    setShowDeleteSuccess(true);
+  };
+
+
+  const renderView = () => {
+    if (tasksLoading || journalsLoading) {
+        return <div className="flex h-full items-center justify-center"><p className="text-lg font-semibold text-slate-700 dark:text-slate-300">Memuat data...</p></div>
+    }
+
+    const combinedError = tasksError || journalsError;
+    if (combinedError) {
+        return (
+            <div className="flex h-full items-center justify-center p-4 sm:p-8">
+                <div className="bg-red-100 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 px-6 py-4 rounded-xl text-center shadow-md" role="alert">
+                    <strong className="font-bold text-lg">Oops! Terjadi kesalahan.</strong>
+                    <p className="mt-2">{combinedError}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-4">Ini bisa terjadi jika ada masalah dengan koneksi ke database atau jika tabel belum disiapkan. Silakan periksa konsol untuk detail teknis.</p>
+                </div>
+            </div>
+        );
+    }
+
+    switch (currentView) {
+      case 'daily':
+        return <DailyView tasks={tasks} onSelectTask={handleSelectTask} onUpdateTask={updateTask} onBulkUpdateTasks={bulkUpdateTasks} onDeleteTask={deleteTask} onAddTask={addTask} onOpenManualAdd={handleOpenManualAdd}/>;
+      case 'overdue':
+        const overdueViewTasks = showTour && tourFakeTask ? [...tasks, tourFakeTask] : tasks;
+        return <OverdueView tasks={overdueViewTasks} onSelectTask={handleSelectTask} onUpdateTask={updateTask} onDeleteTask={deleteTask} onBulkDeleteTask={bulkDeleteTasks} />;
+      case 'weekly':
+        return <WeeklyView tasks={tasks} onSelectTask={handleSelectTask} onUpdateTask={updateTask} onDeleteTask={deleteTask}/>;
+      case 'monthly':
+        return <MonthlyView tasks={tasks}/>;
+      case 'journal':
+        return <JournalView tasks={tasks} journals={journals} createOrUpdateJournal={createOrUpdateJournal} downloadJournal={downloadJournal} deleteJournal={deleteJournal} />;
+      case 'settings':
+        return <SettingsView user={session?.user || null} profile={profile} onUpdateProfile={updateUserProfile} onDeleteAccountRequest={() => setDeleteAccountModalOpen(true)} />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="mb-8" data-tour-id="smart-add-task">
-      <form onSubmit={handleSubmit}>
-        <div className="relative">
-          <SparklesIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" />
-          <input
-            type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={isAiLoading}
-            placeholder={placeholderText}
-            className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-200 shadow-sm"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-            {isAiLoading ? <LoaderIcon className="w-5 h-5 text-slate-400" /> : (
-              <button type="button" onClick={toggleListening} className={`p-1 rounded-full transition-colors ${micButtonClass}`} aria-label="Gunakan perintah suara">
-                <MicIcon className="w-6 h-6" />
-              </button>
-            )}
-          </div>
-        </div>
-      </form>
-      {speechError && <p className="text-xs text-red-500 text-center mt-2">{speechError}</p>}
-      <p className="text-xs text-slate-500 dark:text-slate-300 text-center mt-2">
-        {helperText}
-      </p>
-      {showRetryModal && <ConfirmationModal title="Terjadi Kegagalan" message="AI gagal memproses permintaan Anda. Apakah Anda ingin mencoba lagi?" confirmText="Coba Lagi" onConfirm={() => handleAiRequest()} onCancel={() => setShowRetryModal(false)} isDestructive={false} />}
-      {isConflictModalOpen && conflictingTask && <AiConflictResolutionModal taskTitle={conflictingTask.title} suggestedSlots={suggestedSlots} onClose={() => { setConflictModalOpen(false); setConflictingTask(null); }} onSelectSlot={handleSlotSelection} onManualAdd={handleManualAdd} />}
+    <div className="flex h-screen font-sans text-slate-800 dark:text-slate-200 overflow-hidden">
+      <Sidebar 
+        currentView={currentView} 
+        onViewChange={(view) => {
+            setCurrentView(view);
+            setIsSidebarOpen(false); // Close sidebar on view change on mobile
+        }}
+        notificationPermission={notificationPermission}
+        requestNotificationPermission={requestNotificationPermission}
+        onLogoutRequest={() => setShowLogoutConfirm(true)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+      <main className="flex-1 lg:ml-64 overflow-y-auto bg-slate-50 dark:bg-slate-900 w-full">
+        {/* Mobile Header */}
+        <header className="lg:hidden sticky top-0 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+            <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600 dark:text-slate-300">
+                <MenuIcon className="w-6 h-6" />
+            </button>
+            <div className="flex items-center space-x-2">
+                <FlowmindIcon className="w-6 h-6 text-blue-600"/>
+                <span className="text-lg font-bold text-slate-800 dark:text-slate-200">Flowmind</span>
+            </div>
+            <div className="w-6"></div>
+        </header>
+
+        {renderView()}
+      </main>
+      
+      {isAiAssistantOpen && <AiAssistant onClose={() => setIsAiAssistantOpen(false)} />}
+
+      <div className="fixed bottom-6 right-6 lg:bottom-8 lg:right-8 flex flex-col items-center gap-4 z-20">
+        <button
+          onClick={() => setIsAiAssistantOpen(true)}
+          data-tour-id="ai-assistant-button"
+          className="bg-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-800"
+          aria-label="Buka Asisten AI"
+        >
+          <SparklesBotIcon className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => setAddModalOpen(true)}
+          data-tour-id="add-task-button"
+          className="bg-blue-600 text-white w-14 h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center shadow-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
+          aria-label="Tambah Tugas Baru"
+        >
+          <PlusIcon className="w-7 h-7 lg:w-8 lg:h-8" />
+        </button>
+      </div>
+
+      {isAddModalOpen && (
+        <AddTaskModal
+          initialData={initialTaskData}
+          tasks={tasks}
+          onClose={() => {
+            setAddModalOpen(false);
+            setInitialTaskData(null); // Selalu bersihkan data awal setelah ditutup
+          }}
+          onAddTask={addTask}
+        />
+      )}
+      
+      {selectedTask && (
+        <TaskDetailModal 
+            task={selectedTask} 
+            tasks={tasks}
+            onClose={handleCloseDetailModal} 
+            onUpdate={updateTask}
+            onDelete={deleteTask}
+            onStartFocus={handleStartFocus}
+        />
+      )}
+      
+      {showPermissionWizard && (
+        <PermissionWizard
+          onRequestNotificationPermission={requestNotificationPermission}
+          onRequestMicPermission={handleRequestMicPermission}
+          onClose={handleWizardClose}
+        />
+      )}
+
+      {isDeleteAccountModalOpen && (
+        <DeleteAccountModal
+          onClose={() => setDeleteAccountModalOpen(false)}
+          onConfirmDelete={handleDeleteAccount}
+        />
+      )}
+
+      {showDeleteSuccess && (
+        <DeleteSuccessModal onClose={handleSuccessModalClose} />
+      )}
+
+      {visibility === 'full' && <FocusMode />}
+      {visibility === 'minimized' && <FloatingFocusWidget />}
+      {showTour && <OnboardingTour onClose={handleTourClose} onStepChange={handleTourStepChange} />}
+      
+      <InstallPwaPrompt 
+        isVisible={showInstallPrompt}
+        isIos={isIos}
+        onInstall={() => {
+          triggerInstall();
+          setShowInstallPrompt(false);
+          // Ingat pilihan ini agar tidak muncul lagi
+          sessionStorage.setItem('flowmind-install-prompt-closed', 'true');
+        }}
+        onClose={() => {
+          setShowInstallPrompt(false);
+          // Ingat pilihan ini untuk sesi ini
+          sessionStorage.setItem('flowmind-install-prompt-closed', 'true');
+        }}
+      />
+
+      {showLogoutConfirm && (
+        <ConfirmationModal
+            title="Konfirmasi Keluar"
+            message="Apakah Anda yakin ingin keluar dari akun Anda?"
+            confirmText="Ya, Keluar"
+            onConfirm={signOut}
+            onCancel={() => setShowLogoutConfirm(false)}
+            isDestructive={true}
+        />
+      )}
     </div>
   );
 };
 
-export default SmartAddTask;
+
+const App: React.FC = () => {
+  // FIX: Destructure `profile` from useAuth to pass it to the provider.
+  const { session, loading, isPasswordRecovery, profile } = useAuth();
+
+  if (loading) {
+    return (
+        <div className="h-screen w-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900">
+            <p className="text-xl font-bold text-slate-700 dark:text-slate-300">Memuat Sesi...</p>
+        </div>
+    );
+  }
+
+  // Jika pengguna sedang dalam alur pemulihan password (bahkan jika mereka memiliki sesi sementara)
+  // atau jika mereka tidak memiliki sesi sama sekali, tampilkan komponen Auth.
+  if (isPasswordRecovery || !session) {
+    return <Auth />;
+  }
+
+  return (
+    // FIX: Pass the `profile` object to the FocusTimerProvider as a required prop.
+    <FocusTimerProvider profile={profile}>
+      <AppContent />
+    </FocusTimerProvider>
+  );
+};
+
+
+export default App;

@@ -78,7 +78,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
     <div className="p-4 sm:p-8">
       <header className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Mingguan</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Progress dan ringkasan tugas dalam 7 hari.</p>
+        <p className="text-slate-500 dark:text-slate-200 mt-1">Progress dan ringkasan tugas dalam 7 hari.</p>
       </header>
       
       <div className="mb-8 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
@@ -130,7 +130,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
                       className={`p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 group flex items-center justify-between ${wasJustMoved ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-900/50' : 'bg-slate-50 dark:bg-slate-800/50'} ${isProjected ? 'opacity-60 cursor-default' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center truncate">
-                        <p className={`text-sm font-medium text-slate-700 dark:text-slate-300 truncate ${isOverdue ? 'text-red-600 dark:text-red-400' : ''}`}>
+                        <p className={`text-sm font-medium text-slate-700 dark:text-slate-200 truncate ${isOverdue ? 'text-red-600 dark:text-red-400' : ''}`}>
                           {task.title}
                         </p>
                          {wasJustMoved && (
@@ -165,11 +165,11 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
                       </div>
                     </div>
                   );
-                }) : <p className="text-center text-xs text-slate-400 dark:text-slate-500 py-4">Tidak ada tugas</p>}
+                }) : <p className="text-center text-xs text-slate-400 dark:text-slate-300 py-4">Tidak ada tugas</p>}
               </div>
               <div className="mt-4 pt-2 border-t dark:border-slate-700 flex justify-around text-xs">
                 <span title="Selesai" className="flex items-center text-green-600 dark:text-green-400"><CheckCircleIcon className="w-3 h-3 mr-1"/>{summary.done}</span>
-                <span title="Tertunda" className="flex items-center text-slate-500 dark:text-slate-400"><ClockIcon className="w-3 h-3 mr-1"/>{summary.pending}</span>
+                <span title="Tertunda" className="flex items-center text-slate-500 dark:text-slate-200"><ClockIcon className="w-3 h-3 mr-1"/>{summary.pending}</span>
               </div>
             </div>
           );
@@ -182,7 +182,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                     Tugas untuk {selectedDay.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </h3>
-                <button onClick={() => setSelectedDay(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                <button onClick={() => setSelectedDay(null)} className="p-1 text-slate-400 dark:text-slate-200 hover:text-slate-600 dark:hover:text-slate-100 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
                     <XIcon className="w-5 h-5" />
                 </button>
             </div>
@@ -202,7 +202,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
                                         <span className={`w-2.5 h-2.5 mt-1.5 rounded-full flex-shrink-0 ${task.status === TaskStatus.Done ? 'bg-green-500' : (new Date(task.endTime).getTime() < new Date().getTime() ? 'bg-red-500' : 'bg-slate-400')}`}></span>
                                         <div>
                                             <p className={`font-medium ${task.status === TaskStatus.Done ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>{task.title}</p>
-                                            <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                            <div className="flex items-center text-xs text-slate-500 dark:text-slate-200 mt-1">
                                                 <ClockIcon className="w-3 h-3 mr-1.5" />
                                                 <span>{new Date(task.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')} - {new Date(task.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')}</span>
                                             </div>
@@ -214,7 +214,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
                     )
                 } else {
                     return (
-                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Tidak ada tugas yang dijadwalkan untuk hari ini.</p>
+                        <p className="text-center text-slate-500 dark:text-slate-200 py-4">Tidak ada tugas yang dijadwalkan untuk hari ini.</p>
                     )
                 }
             })()}

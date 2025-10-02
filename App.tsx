@@ -67,8 +67,14 @@ const AppContent: React.FC = () => {
   // Menampilkan panduan izin (Permission Wizard) saat pertama kali masuk
   useEffect(() => {
     const checkPermissions = async () => {
+      // Jangan tampilkan jika wizard telah ditutup di sesi ini
       if (sessionStorage.getItem('flowmind-permission-wizard-dismissed')) {
         return;
+      }
+      
+      // Jangan tampilkan wizard jika tur orientasi sedang aktif
+      if (showTour) {
+          return;
       }
 
       const notifPerm = Notification.permission;
@@ -86,11 +92,12 @@ const AppContent: React.FC = () => {
       }
     };
     
-    // Check after profile is loaded to avoid showing it on the auth screen
+    // Periksa setelah profil dimuat untuk menghindari menampilkannya di layar auth
     if (profile) {
       checkPermissions();
     }
-  }, [profile]);
+  // Tambahkan showTour sebagai dependensi agar efek ini berjalan kembali saat tur selesai
+  }, [profile, showTour]);
 
 
   useEffect(() => {

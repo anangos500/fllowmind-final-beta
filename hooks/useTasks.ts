@@ -111,30 +111,54 @@ export const useTasks = () => {
   
       if (justCompletedRecurringTask) {
         if (updatedTask.recurrence === Recurrence.Daily) {
-            const nextStartTime = new Date(updatedTask.startTime);
-            nextStartTime.setDate(nextStartTime.getDate() + 1);
-            const nextEndTime = new Date(updatedTask.endTime);
-            nextEndTime.setDate(nextEndTime.getDate() + 1);
-  
-            const nextTaskInstance: Omit<Task, 'id' | 'userId' | 'createdAt'> = {
-              title: updatedTask.title,
-              startTime: nextStartTime.toISOString(),
-              endTime: nextEndTime.toISOString(),
-              status: TaskStatus.ToDo,
-              checklist: updatedTask.checklist.map(item => ({ ...item, completed: false })),
-              notes: updatedTask.notes,
-              isImportant: updatedTask.isImportant,
-              recurrence: updatedTask.recurrence,
-              recurringTemplateId: updatedTask.recurringTemplateId || updatedTask.id,
-            };
-      
-            const snakeCaseNextTask = toSnakeCase(nextTaskInstance);
-      
-            const { error: insertError } = await supabase.from('tasks').insert([
-              { ...snakeCaseNextTask, user_id: user.id }
-            ]);
-      
-            if (insertError) throw insertError;
+            
+            const templateId = updatedTask.recurringTemplateId || updatedTask.id;
+
+            // Define the start and end of the next day for checking existence
+            const nextDayStart = new Date(updatedTask.startTime);
+            nextDayStart.setDate(nextDayStart.getDate() + 1);
+            nextDayStart.setHours(0, 0, 0, 0);
+
+            const nextDayEnd = new Date(nextDayStart);
+            nextDayEnd.setHours(23, 59, 59, 999);
+
+            // Check if an instance for the next day already exists for this recurring series
+            const nextInstanceExists = tasks.some(task => {
+                const belongsToSeries = task.recurringTemplateId === templateId || task.id === templateId;
+                if (!belongsToSeries) return false;
+        
+                const taskStartTime = new Date(task.startTime);
+                return taskStartTime >= nextDayStart && taskStartTime <= nextDayEnd;
+            });
+            
+            // Only create the next instance if it doesn't already exist
+            if (!nextInstanceExists) {
+                const nextStartTime = new Date(updatedTask.startTime);
+                nextStartTime.setDate(nextStartTime.getDate() + 1);
+                const nextEndTime = new Date(updatedTask.endTime);
+                nextEndTime.setDate(nextEndTime.getDate() + 1);
+    
+                const nextTaskInstance: Omit<Task, 'id' | 'userId' | 'createdAt'> = {
+                  title: updatedTask.title,
+                  startTime: nextStartTime.toISOString(),
+                  endTime: nextEndTime.toISOString(),
+                  status: TaskStatus.ToDo,
+                  checklist: updatedTask.checklist.map(item => ({ ...item, completed: false })),
+                  notes: updatedTask.notes,
+                  isImportant: updatedTask.isImportant,
+                  recurrence: updatedTask.recurrence,
+                  recurringTemplateId: templateId, // Use the determined templateId
+                  tags: updatedTask.tags, // Carry over tags to the next instance
+                };
+          
+                const snakeCaseNextTask = toSnakeCase(nextTaskInstance);
+          
+                const { error: insertError } = await supabase.from('tasks').insert([
+                  { ...snakeCaseNextTask, user_id: user.id }
+                ]);
+          
+                if (insertError) throw insertError;
+            }
         }
       }
   

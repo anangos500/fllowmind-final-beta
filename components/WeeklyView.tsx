@@ -7,6 +7,7 @@ import MoveTaskModal from './MoveTaskModal';
 import TrashIcon from './icons/TrashIcon';
 import { getTasksForDay } from '../utils/taskUtils';
 import ConfirmationModal from './ConfirmationModal';
+import XIcon from './icons/XIcon';
 
 interface WeeklyViewProps {
   tasks: Task[];
@@ -20,6 +21,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
   const [taskToMove, setTaskToMove] = useState<Task | null>(null);
   const [movedTaskId, setMovedTaskId] = useState<string | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   const weekDays: Date[] = [];
   for (let i = -3; i <= 3; i++) {
@@ -75,8 +77,8 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
   return (
     <div className="p-4 sm:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Tinjauan 7 Hari</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Progress mingguan dan ringkasan tugas.</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Mingguan</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Progress dan ringkasan tugas dalam 7 hari.</p>
       </header>
       
       <div className="mb-8 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
@@ -94,6 +96,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
           const dayTasks = getTasksForDay(day, tasks);
           const isToday = day.toDateString() === today.toDateString();
           const isPast = day.getTime() < startOfToday.getTime();
+          const isSelected = selectedDay?.toDateString() === day.toDateString();
           
           const summary = {
             done: dayTasks.filter(t => t.status === TaskStatus.Done && !t.id.includes('-projected-')).length,
@@ -101,7 +104,16 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
           };
 
           return (
-            <div key={day.toISOString()} className={`rounded-xl p-4 flex flex-col ${isToday ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-500 dark:border-blue-700' : 'bg-white dark:bg-slate-800 shadow-sm'}`}>
+            <div 
+              key={day.toISOString()} 
+              onClick={() => {
+                // Hanya izinkan pemilihan hari pada layar yang lebih besar (mode desktop)
+                if (window.innerWidth >= 1024) { 
+                  setSelectedDay(prev => (prev && prev.toDateString() === day.toDateString() ? null : day));
+                }
+              }}
+              className={`rounded-xl p-4 flex flex-col transition-all duration-200 ${isToday ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-500 dark:border-blue-700' : 'bg-white dark:bg-slate-800 shadow-sm'} ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : 'lg:hover:shadow-md lg:cursor-pointer'}`}
+            >
               <div className={`text-center mb-4 ${isToday ? 'font-bold text-blue-700 dark:text-blue-300' : 'text-slate-800 dark:text-slate-200'}`}>
                 <p className="text-sm">{day.toLocaleDateString('id-ID', { weekday: 'short' })}</p>
                 <p className="text-2xl">{day.getDate()}</p>
@@ -114,7 +126,7 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
                   return (
                     <div 
                       key={task.id} 
-                      onClick={() => !isProjected && onSelectTask(task)} 
+                      onClick={(e) => { e.stopPropagation(); if (!isProjected) onSelectTask(task); }} 
                       className={`p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 group flex items-center justify-between ${wasJustMoved ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-900/50' : 'bg-slate-50 dark:bg-slate-800/50'} ${isProjected ? 'opacity-60 cursor-default' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center truncate">
@@ -163,6 +175,51 @@ const WeeklyView: React.FC<WeeklyViewProps> = ({ tasks, onSelectTask, onUpdateTa
           );
         })}
       </div>
+
+      {selectedDay && (
+        <div className="mt-8 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-xl shadow-sm animate-fade-in" data-tour-id="weekly-task-details">
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                    Tugas untuk {selectedDay.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </h3>
+                <button onClick={() => setSelectedDay(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <XIcon className="w-5 h-5" />
+                </button>
+            </div>
+            {(() => {
+                const tasksForSelectedDay = getTasksForDay(selectedDay, tasks);
+                if (tasksForSelectedDay.length > 0) {
+                    return (
+                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                            {tasksForSelectedDay.map(task => {
+                                const isProjected = task.id.includes('-projected-');
+                                return (
+                                    <div 
+                                        key={task.id} 
+                                        onClick={() => !isProjected && onSelectTask(task)}
+                                        className={`p-3 rounded-md flex items-start gap-3 transition-colors ${isProjected ? 'opacity-60 cursor-default' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer'}`}
+                                    >
+                                        <span className={`w-2.5 h-2.5 mt-1.5 rounded-full flex-shrink-0 ${task.status === TaskStatus.Done ? 'bg-green-500' : (new Date(task.endTime).getTime() < new Date().getTime() ? 'bg-red-500' : 'bg-slate-400')}`}></span>
+                                        <div>
+                                            <p className={`font-medium ${task.status === TaskStatus.Done ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>{task.title}</p>
+                                            <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                                <ClockIcon className="w-3 h-3 mr-1.5" />
+                                                <span>{new Date(task.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')} - {new Date(task.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )
+                } else {
+                    return (
+                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Tidak ada tugas yang dijadwalkan untuk hari ini.</p>
+                    )
+                }
+            })()}
+        </div>
+      )}
 
       {taskToMove && (
         <MoveTaskModal

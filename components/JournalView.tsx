@@ -3,6 +3,12 @@
 
 
 
+
+
+
+
+
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Task, Journal, TaskStatus } from '../types';
 import jsPDF from 'jspdf';
@@ -199,7 +205,9 @@ const JournalView: React.FC<JournalViewProps> = ({ tasks, journals, createOrUpda
         });
         
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        const pdfBlob = pdf.getBlob();
+        // FIX: Replace 'getBlob()' with 'output('blob')' which is the correct jsPDF method
+        // to generate a Blob from the PDF document, resolving the TypeScript error.
+        const pdfBlob = pdf.output('blob');
 
         await createOrUpdateJournal(
             selectedDate, 
@@ -248,6 +256,24 @@ const JournalView: React.FC<JournalViewProps> = ({ tasks, journals, createOrUpda
   const isToday = new Date().toISOString().split('T')[0] === selectedDate;
   const canEditOrSave = notes.trim() !== '' || completedTasksForDate.length > 0;
   
+  const CompletedTasksContent = (
+    <>
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Tugas Selesai</h3>
+        {completedTasksForDate.length > 0 ? (
+           <ul className="space-y-2">
+               {completedTasksForDate.map(task => (
+                   <li key={task.id} className="flex items-center text-slate-600 dark:text-slate-200">
+                       <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
+                       <span className="truncate">{task.title}</span>
+                   </li>
+               ))}
+           </ul>
+        ) : (
+           <p className="text-sm text-center text-slate-500 dark:text-slate-300 py-4">Belum ada tugas yang selesai hari ini.</p>
+        )}
+   </>
+  );
+
   return (
     <div className="p-4 sm:p-8">
       <header className="mb-8">
@@ -269,6 +295,11 @@ const JournalView: React.FC<JournalViewProps> = ({ tasks, journals, createOrUpda
                     onChange={e => setSelectedDate(e.target.value)}
                     className="p-2 rounded-md bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200"
                 />
+            </div>
+            
+            {/* Mobile-only completed tasks section, inside the editor card */}
+            <div className="lg:hidden mb-6 border-b border-slate-200 dark:border-slate-700 pb-6">
+              {CompletedTasksContent}
             </div>
 
             <div className="relative mb-4">
@@ -319,21 +350,12 @@ const JournalView: React.FC<JournalViewProps> = ({ tasks, journals, createOrUpda
 
         {/* Previous Journals Section */}
         <div className="lg:col-span-1">
-             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm mb-8">
-                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Tugas Selesai</h3>
-                 {completedTasksForDate.length > 0 ? (
-                    <ul className="space-y-2">
-                        {completedTasksForDate.map(task => (
-                            <li key={task.id} className="flex items-center text-slate-600 dark:text-slate-200">
-                                <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                                <span className="truncate">{task.title}</span>
-                            </li>
-                        ))}
-                    </ul>
-                 ) : (
-                    <p className="text-sm text-center text-slate-500 dark:text-slate-300 py-4">Belum ada tugas yang selesai hari ini.</p>
-                 )}
+            <div className="hidden lg:block mb-8">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+                {CompletedTasksContent}
+              </div>
             </div>
+
             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">Entri Sebelumnya</h3>
             <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm max-h-96 overflow-y-auto">
                 {sortedJournals.length > 0 ? (

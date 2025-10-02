@@ -43,20 +43,20 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({ onClose, onConf
       <div className={`bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md transition-all duration-300 ease-out overflow-hidden ${isAnimatingOut ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
         <header className="p-5 border-b dark:border-slate-700 flex justify-between items-center">
           <h2 className="text-xl font-bold text-red-700 dark:text-red-400">Konfirmasi Hapus Akun</h2>
-          <button type="button" onClick={handleClose} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">
+          <button type="button" onClick={handleClose} className="text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-200">
             <XIcon className="w-6 h-6" />
           </button>
         </header>
 
         <main className="p-6">
-          <p className="text-slate-600 dark:text-slate-300 mb-4 text-center">
+          <p className="text-slate-600 dark:text-slate-200 mb-4 text-center">
             Ini adalah tindakan permanen dan tidak dapat diurungkan. Semua tugas, jurnal, dan data akun Anda akan dihapus.
           </p>
-          <p className="text-slate-600 dark:text-slate-300 mb-4 text-center font-semibold">
+          <p className="text-slate-600 dark:text-slate-200 mb-4 text-center font-semibold">
             Untuk melanjutkan, silakan masukkan kata sandi Anda.
           </p>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="password-confirm">Password</label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1" htmlFor="password-confirm">Password</label>
             <div className="relative">
               <input 
                 id="password-confirm" 
@@ -70,7 +70,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({ onClose, onConf
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)} 
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 dark:text-slate-400"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 dark:text-slate-300"
                 disabled={isLoading}
               >
                 {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}

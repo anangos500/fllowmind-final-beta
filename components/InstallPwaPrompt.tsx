@@ -57,7 +57,7 @@ const InstallPwaPrompt: React.FC<InstallPwaPromptProps> = ({ isVisible, isIos, o
 
   return (
     <div
-      className={`fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md z-50 transition-all duration-300 ease-out ${show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}
+      className={`fixed top-4 right-4 sm:max-w-md z-50 transition-all duration-300 ease-out ${show ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}
       role="alert"
       aria-live="polite"
     >

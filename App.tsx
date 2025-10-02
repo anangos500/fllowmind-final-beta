@@ -82,16 +82,21 @@ const AppContent: React.FC = () => {
       }
 
       const notifPerm = Notification.permission;
-      let micPerm = 'prompt';
+      let micPermGranted = false; // Asumsikan belum diberikan secara default
       try {
-        // 'microphone' as PermissionName is a type cast for TypeScript
+        // navigator.permissions.query bisa tidak dapat diandalkan, terutama di Android.
+        // Kita hanya mempercayai status 'granted'. 'prompt' dan 'denied' (yang mungkin salah)
+        // akan diperlakukan sebagai "belum diberikan" untuk memastikan wizard muncul.
         const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-        micPerm = result.state;
+        if (result.state === 'granted') {
+          micPermGranted = true;
+        }
       } catch (e) {
-        console.warn("Could not query microphone permission:", e);
+        console.warn("Tidak dapat memeriksa izin mikrofon. Asumsikan belum diberikan.", e);
       }
       
-      if (notifPerm === 'default' || micPerm === 'prompt') {
+      // Tampilkan wizard jika izin notifikasi belum diputuskan ATAU izin mikrofon belum diberikan secara eksplisit.
+      if (notifPerm === 'default' || !micPermGranted) {
         // Atur timeout untuk menampilkan wizard setelah jeda singkat.
         wizardTimer = window.setTimeout(() => {
             setShowPermissionWizard(true);

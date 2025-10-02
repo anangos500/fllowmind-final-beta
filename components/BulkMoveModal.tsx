@@ -53,20 +53,20 @@ const BulkMoveModal: React.FC<BulkMoveModalProps> = ({ tasks, onClose, onUpdate,
           </button>
         </header>
         <main className="p-6">
-          <p className="text-slate-600 dark:text-slate-300 mb-6 text-center">
+          <p className="text-slate-600 dark:text-slate-200 mb-6 text-center">
             {descriptionText}
           </p>
           <div className="space-y-3">
             {context === 'overdue' && (
                 <button onClick={() => handleMove(today)} className="w-full text-left p-4 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold text-slate-700 dark:text-slate-200 transition-colors">
-                Pindahkan ke Hari Ini <span className="font-normal text-slate-500 dark:text-slate-400 text-sm ml-2">({formatDate(today)})</span>
+                Pindahkan ke Hari Ini <span className="font-normal text-slate-500 dark:text-slate-300 text-sm ml-2">({formatDate(today)})</span>
                 </button>
             )}
             <button onClick={() => handleMove(tomorrow)} className="w-full text-left p-4 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold text-slate-700 dark:text-slate-200 transition-colors">
-              Pindahkan ke Besok <span className="font-normal text-slate-500 dark:text-slate-400 text-sm ml-2">({formatDate(tomorrow)})</span>
+              Pindahkan ke Besok <span className="font-normal text-slate-500 dark:text-slate-300 text-sm ml-2">({formatDate(tomorrow)})</span>
             </button>
             <button onClick={() => handleMove(dayAfter)} className="w-full text-left p-4 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold text-slate-700 dark:text-slate-200 transition-colors">
-              Pindahkan ke Lusa <span className="font-normal text-slate-500 dark:text-slate-400 text-sm ml-2">({formatDate(dayAfter)})</span>
+              Pindahkan ke Lusa <span className="font-normal text-slate-500 dark:text-slate-300 text-sm ml-2">({formatDate(dayAfter)})</span>
             </button>
           </div>
         </main>

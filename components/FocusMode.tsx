@@ -1,4 +1,7 @@
 
+
+
+
 import React, { useState, useEffect } from 'react';
 import { useFocusTimer } from '../contexts/FocusTimerContext';
 import XIcon from './icons/XIcon';
@@ -65,7 +68,7 @@ const FocusMode: React.FC = () => {
       </div>
 
       <div className="text-center">
-        <p className="text-xl text-slate-300 mb-2">{stateText[pomodoroState]}</p>
+        <p className="text-xl text-slate-200 mb-2">{stateText[pomodoroState]}</p>
         <h1 className="text-4xl font-bold mb-8 truncate max-w-2xl">{task.title}</h1>
         
         <div className="font-mono text-8xl md:text-9xl font-bold tracking-tighter mb-10">
@@ -86,7 +89,7 @@ const FocusMode: React.FC = () => {
           )}
         </div>
         
-        <div className="mt-12 text-slate-400">
+        <div className="mt-12 text-slate-200">
             Siklus selesai: {cycles}
         </div>
       </div>

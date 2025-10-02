@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
 
   const { tasks, addTask, updateTask, deleteTask, bulkDeleteTasks, bulkUpdateTasks, loading: tasksLoading, error: tasksError } = useTasks();
   const { journals, loading: journalsLoading, error: journalsError, createOrUpdateJournal, downloadJournal, deleteJournal } = useJournals();
-  const { notificationPermission, requestNotificationPermission } = useNotifications(tasks);
+  const { requestNotificationPermission } = useNotifications(tasks);
   const { session, signOut, profile, updateUserProfile } = useAuth();
   
   const [isAddModalOpen, setAddModalOpen] = useState(false);
@@ -320,8 +320,6 @@ const AppContent: React.FC = () => {
             setCurrentView(view);
             setIsSidebarOpen(false); // Close sidebar on view change on mobile
         }}
-        notificationPermission={notificationPermission}
-        requestNotificationPermission={requestNotificationPermission}
         onLogoutRequest={() => setShowLogoutConfirm(true)}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}

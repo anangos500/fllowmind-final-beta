@@ -22,7 +22,8 @@ import MicIcon from './icons/MicIcon';
 interface SidebarProps {
   currentView: View;
   onViewChange: (view: View) => void;
-  notificationPermission: 'default' | 'granted' | 'denied';
+  // FIX: Update notification permission type to align with modern PermissionState.
+  notificationPermission: 'granted' | 'denied' | 'prompt';
   requestNotificationPermission: () => void;
   micPermission: 'default' | 'granted' | 'denied' | 'prompt';
   requestMicPermission: () => void;
@@ -99,7 +100,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
                             </p>
                         </div>
                     )}
-                    {notificationPermission === 'default' && (
+                    {/* FIX: Tampilkan tombol untuk meminta izin notifikasi jika statusnya 'prompt'. */}
+                    {notificationPermission === 'prompt' && (
                         <button 
                             onClick={requestNotificationPermission}
                             className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-lg text-slate-600 dark:text-amber-200 bg-amber-100 dark:bg-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-800/80 transition-colors"
@@ -118,7 +120,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, notificati
                             <span className="font-semibold text-sm">Notifikasi Diblokir</span>
                         </button>
                     )}
-                     {/* FIX: Show the button to request mic permission if the state is 'default' or 'prompt' to correctly handle all cases where permission can be requested. */}
                      {(micPermission === 'default' || micPermission === 'prompt') && (
                         <button 
                             onClick={requestMicPermission}

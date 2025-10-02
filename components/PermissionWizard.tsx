@@ -21,13 +21,18 @@ const PermissionWizard: React.FC<PermissionWizardProps> = ({
     // Animate in
     requestAnimationFrame(() => setVisible(true));
     
-    // The Permissions API query for microphone can be unreliable on Android,
-    // often defaulting to 'denied' until a user gesture triggers a request.
-    // By removing the initial check (`navigator.permissions.query`), we ensure
-    // the button is always enabled by default. The `handleRequestMic` function,
-    // which uses the more reliable `getUserMedia`, will then correctly handle
-    // the permission request and update the UI state.
-    
+    const checkMicStatus = async () => {
+        try {
+            // 'microphone' as PermissionName is a type cast for TypeScript
+            const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+            setMicStatus(result.state);
+            result.onchange = () => setMicStatus(result.state);
+        } catch (e) {
+            console.warn("Permission query for microphone failed.", e);
+        }
+    }
+    checkMicStatus();
+
     // Watch for notification status changes (can happen outside the component)
     const interval = setInterval(() => {
         if (Notification.permission !== notifStatus) {

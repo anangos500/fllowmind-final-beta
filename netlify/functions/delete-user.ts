@@ -19,17 +19,17 @@ const createAdminClient = (): SupabaseClient => {
 
 const handler: Handler = async (event: HandlerEvent) => {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+    return { statusCode: 405, body: JSON.stringify({ error: 'Metode Tidak Diizinkan' }) };
   }
 
   const { password } = JSON.parse(event.body || '{}');
   const authHeader = event.headers.authorization;
 
   if (!password) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Password is required' }) };
+    return { statusCode: 400, body: JSON.stringify({ error: 'Password harus diisi.' }) };
   }
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { statusCode: 401, body: JSON.stringify({ error: 'Authorization header is missing or invalid' }) };
+    return { statusCode: 401, body: JSON.stringify({ error: 'Header otorisasi tidak valid atau tidak ada.' }) };
   }
   
   const jwt = authHeader.split(' ')[1];
@@ -41,7 +41,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(jwt);
 
     if (userError || !user) {
-      return { statusCode: 401, body: JSON.stringify({ error: 'Invalid token. User not found.' }) };
+      return { statusCode: 401, body: JSON.stringify({ error: 'Token tidak valid atau pengguna tidak ditemukan.' }) };
     }
 
     // 2. Verifikasi kata sandi pengguna dengan mencoba login.
@@ -71,7 +71,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     console.error("Error in delete-user function:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'An internal server error occurred while deleting the user.', details: error.message }),
+      body: JSON.stringify({ error: 'Terjadi kesalahan server internal saat menghapus pengguna.', details: error.message }),
     };
   }
 };

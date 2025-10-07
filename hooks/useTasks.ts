@@ -56,23 +56,6 @@ export const useTasks = () => {
       
       const camelCaseTasks = data.map(task => toCamelCase(task) as Task);
       setTasks(camelCaseTasks);
-      
-      // Kirim daftar tugas yang diperbarui ke Service Worker
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'UPDATE_TASKS',
-            payload: camelCaseTasks,
-          });
-      } else if ('serviceWorker' in navigator) {
-          // Jika controller belum tersedia, tunggu hingga siap.
-          navigator.serviceWorker.ready.then(registration => {
-              registration.active?.postMessage({
-                  type: 'UPDATE_TASKS',
-                  payload: camelCaseTasks,
-              });
-          });
-      }
-
     } catch (error: any) {
       console.error('Error fetching tasks:', error.message || error);
       setError('Gagal memuat tugas dari database. Pastikan koneksi internet Anda stabil dan coba lagi.');

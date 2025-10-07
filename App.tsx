@@ -40,7 +40,7 @@ const AppContent: FC = () => {
 
   const { tasks, addTask, updateTask, deleteTask, bulkDeleteTasks, bulkUpdateTasks, loading: tasksLoading, error: tasksError } = useTasks();
   const { journals, loading: journalsLoading, error: journalsError, createOrUpdateJournal, downloadJournal, deleteJournal } = useJournals();
-  const { requestNotificationPermission } = useNotifications();
+  const { requestNotificationPermission } = useNotifications(tasks);
   const { session, signOut, profile, updateUserProfile } = useAuth();
   
   const [isAddModalOpen, setAddModalOpen] = useState(false);

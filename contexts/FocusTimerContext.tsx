@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, PropsWithChildren, FC } from 'react';
 import { Task, TaskStatus, Profile } from '../types';
 
-type PomodoroState = 'focus' | 'short_break' | 'long_break';
+type PomodoroState = 'focus' | 'short_break' | 'long_break' | 'ending';
 type VisibilityState = 'hidden' | 'full' | 'minimized';
 
 const POMODORO_TIMES = {
@@ -50,6 +50,7 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
     // FIX: Refs for preloaded audio elements to prevent race conditions on mobile.
     const focusEndAudioRef = useRef<HTMLAudioElement | null>(null);
     const breakEndAudioRef = useRef<HTMLAudioElement | null>(null);
+    const lastPomodoroStateRef = useRef<PomodoroState>(pomodoroState);
 
 
     // Effect to update browser tab title
@@ -109,6 +110,11 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             breakEndAudioRef.current.load();
         }
     }, [profile]);
+    
+    // Keep a ref of the last state to know what state ended before transitioning to 'ending'
+    useEffect(() => {
+        lastPomodoroStateRef.current = pomodoroState;
+    }, [pomodoroState]);
 
 
     const stopFocusSession = useCallback(() => {
@@ -127,6 +133,9 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
         lastBadgedMinute.current = null;
     }, []);
 
+    // FIX: Decouple timer-end side effects (audio/notification) from the subsequent
+    // UI state transition by introducing an intermediate 'ending' state. This robustly
+    // prevents race conditions on mobile browsers that cause the screen to go blank.
     const handleTimerEnd = useCallback(() => {
         setIsActive(false);
         setTimerEndTime(null);
@@ -156,12 +165,23 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             });
         }
         
-        // FIX: Defer subsequent state updates. This gives mobile browsers a moment
-        // to process the notification and preloaded audio playback before handling the 
-        // React re-render, preventing a race condition that causes the UI to go blank.
-        setTimeout(() => {
+        // Transition to the intermediate 'ending' state. The logic to move to the
+        // next session is now handled in a separate useEffect hook.
+        setPomodoroState('ending');
+    }, [pomodoroState, profile, task?.title]);
+
+    // FIX: This new effect handles the transition *after* the timer has ended and all
+    // its side effects have been processed. It waits for a moment in the 'ending'
+    // state before updating the UI for the next session, which resolves the blank
+    // screen issue on mobile devices.
+    useEffect(() => {
+        if (pomodoroState !== 'ending') return;
+
+        const transitionTimeout = setTimeout(() => {
+            const lastState = lastPomodoroStateRef.current;
+
             if (isSequential) {
-                if (pomodoroState === 'focus') {
+                if (lastState === 'focus') {
                     if (focusQueue.length > 0) {
                         setPomodoroState('short_break');
                     } else {
@@ -188,8 +208,8 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
                         stopFocusSession();
                     }
                 }
-            } else { // Standard Pomodoro logic (less used now, but kept for potential future use)
-                if (pomodoroState === 'focus') {
+            } else { // Standard Pomodoro logic
+                if (lastState === 'focus') {
                     const newCycles = cycles + 1;
                     setCycles(newCycles);
                     setPomodoroState(newCycles % 4 === 0 ? 'long_break' : 'short_break');
@@ -197,8 +217,11 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
                     setPomodoroState('focus');
                 }
             }
-        }, 300);
-    }, [isSequential, pomodoroState, focusQueue, stopFocusSession, task, cycles, profile]);
+        }, 2000); // A 2-second pause in the 'ending' state.
+
+        return () => clearTimeout(transitionTimeout);
+    }, [pomodoroState, cycles, focusQueue, isSequential, stopFocusSession, task?.title]);
+
 
     // Real-time timer loop. Recalculates remaining time from a fixed end time to prevent drift.
     useEffect(() => {
@@ -235,7 +258,7 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
     
     // Starts a new timer period when the task or state changes.
     useEffect(() => {
-        if (visibility === 'hidden' || !task || isActive) return;
+        if (visibility === 'hidden' || !task || isActive || pomodoroState === 'ending') return;
 
         let newDuration: number;
         let newEndTime: number;

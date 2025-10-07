@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, FC } from 'react';
 import Sidebar from './components/Sidebar';
 import DailyView from './components/DailyView';
 import WeeklyView from './components/WeeklyView';
@@ -31,7 +31,7 @@ import DeleteAccountModal from './components/DeleteAccountModal';
 import DeleteSuccessModal from './components/DeleteSuccessModal';
 
 
-const AppContent: React.FC = () => {
+const AppContent: FC = () => {
   const [currentView, setCurrentView] = useState<View>(() => {
     const savedView = localStorage.getItem('flowmind-currentView') as View;
     const validViews: View[] = ['daily', 'overdue', 'weekly', 'monthly', 'journal', 'settings'];
@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
 
   const { tasks, addTask, updateTask, deleteTask, bulkDeleteTasks, bulkUpdateTasks, loading: tasksLoading, error: tasksError } = useTasks();
   const { journals, loading: journalsLoading, error: journalsError, createOrUpdateJournal, downloadJournal, deleteJournal } = useJournals();
-  const { requestNotificationPermission } = useNotifications(tasks);
+  const { requestNotificationPermission } = useNotifications();
   const { session, signOut, profile, updateUserProfile } = useAuth();
   
   const [isAddModalOpen, setAddModalOpen] = useState(false);
@@ -438,7 +438,7 @@ const AppContent: React.FC = () => {
 };
 
 
-const App: React.FC = () => {
+const App: FC = () => {
   // FIX: Destructure `profile` from useAuth to pass it to the provider.
   const { session, loading, isPasswordRecovery, profile } = useAuth();
 

@@ -1,13 +1,9 @@
-
-
-
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, FC } from 'react';
 import { useFocusTimer } from '../contexts/FocusTimerContext';
 import XIcon from './icons/XIcon';
 import MinimizeIcon from './icons/MinimizeIcon';
 
-const FocusMode: React.FC = () => {
+const FocusMode: FC = () => {
   const { 
     task, 
     timeLeft, 
@@ -47,13 +43,15 @@ const FocusMode: React.FC = () => {
   const stateText: Record<typeof pomodoroState, string> = {
     focus: "Waktunya Fokus",
     short_break: "Istirahat Singkat",
-    long_break: "Istirahat Panjang"
+    long_break: "Istirahat Panjang",
+    ending: "Waktu Habis!"
   };
   
   const stateColor: Record<typeof pomodoroState, string> = {
     focus: "bg-slate-800",
     short_break: "bg-teal-800",
-    long_break: "bg-indigo-800"
+    long_break: "bg-indigo-800",
+    ending: "bg-gray-800"
   };
 
   return (
@@ -77,15 +75,17 @@ const FocusMode: React.FC = () => {
           <span>{seconds}</span>
         </div>
 
-        <div className="flex justify-center space-x-4">
-          {isActive ? (
-            <button onClick={pauseTimer} className="px-10 py-4 text-lg font-semibold bg-white text-slate-800 rounded-lg shadow-lg hover:bg-slate-200 transition-transform hover:scale-105">
-              Pause
-            </button>
-          ) : (
-            <button onClick={resumeTimer} className="px-10 py-4 text-lg font-semibold bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-transform hover:scale-105">
-              Lanjutkan
-            </button>
+        <div className="flex justify-center space-x-4 h-16">
+          {pomodoroState !== 'ending' && (
+            isActive ? (
+              <button onClick={pauseTimer} className="px-10 py-4 text-lg font-semibold bg-white text-slate-800 rounded-lg shadow-lg hover:bg-slate-200 transition-transform hover:scale-105">
+                Pause
+              </button>
+            ) : (
+              <button onClick={resumeTimer} className="px-10 py-4 text-lg font-semibold bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-transform hover:scale-105">
+                Lanjutkan
+              </button>
+            )
           )}
         </div>
         

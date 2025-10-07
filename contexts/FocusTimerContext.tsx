@@ -110,34 +110,31 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
         }
     }, [profile]);
 
-    // The user's interaction "unlocks" the browser's ability to play audio.
-    // This function is crucial for mobile devices where autoplay is restricted.
-    const unlockAudio = useCallback(() => {
-        [focusEndAudioRef.current, breakEndAudioRef.current].forEach(a => {
-            if (!a) return;
-            const wasMuted = a.muted;
-            a.muted = true;
-            a.play()
-              .then(() => {
-                  a.pause();
-                  a.currentTime = 0;
-                  a.muted = wasMuted;
-              })
-              .catch(() => {
-                  // This can fail on some browsers; we proceed anyway.
-              });
-        });
-    }, []);
-
-    // MOBILE AUDIO UNLOCK: Attach the unlock function to the first user gesture.
+    // MOBILE AUDIO UNLOCK: mainkan sebentar (muted) saat ada gesture user agar play() di akhir tidak diblokir
     useEffect(() => {
-        window.addEventListener('touchend', unlockAudio, { once: true, passive: true });
-        window.addEventListener('click', unlockAudio, { once: true });
-        return () => {
-            window.removeEventListener('touchend', unlockAudio as any);
-            window.removeEventListener('click', unlockAudio as any);
+        const unlock = () => {
+            [focusEndAudioRef.current, breakEndAudioRef.current].forEach(a => {
+                if (!a) return;
+                const wasMuted = a.muted;
+                a.muted = true;
+                a.play()
+                  .then(() => {
+                      a.pause();
+                      a.currentTime = 0;
+                      a.muted = wasMuted;
+                  })
+                  .catch(() => {
+                      // diamkan: beberapa browser memang menolak; kita tetap lanjut.
+                  });
+            });
         };
-    }, [unlockAudio]);
+        window.addEventListener('touchend', unlock, { once: true, passive: true });
+        window.addEventListener('click', unlock, { once: true });
+        return () => {
+            window.removeEventListener('touchend', unlock as any);
+            window.removeEventListener('click', unlock as any);
+        };
+    }, []);
 
     // Keep a ref of the last state to know what state ended before transitioning to 'ending'
     useEffect(() => {
@@ -426,14 +423,12 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
     }, [isActive, timeLeft]);
 
     const minimize = useCallback(() => {
-        unlockAudio(); // Ensure audio is unlocked on state change
         setVisibility('minimized');
-    }, [unlockAudio]);
+    }, []);
     
     const maximize = useCallback(() => {
-        unlockAudio(); // Ensure audio is unlocked on state change
         setVisibility('full');
-    }, [unlockAudio]);
+    }, []);
     
     const value = {
         task,

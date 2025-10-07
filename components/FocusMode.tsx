@@ -48,14 +48,14 @@ const FocusMode: FC = () => {
   };
   
   const stateColor: Record<typeof pomodoroState, string> = {
-    focus: "bg-slate-800",
-    short_break: "bg-teal-800",
-    long_break: "bg-indigo-800",
-    ending: "bg-gray-800"
+    focus: "bg-slate-800/95",
+    short_break: "bg-teal-800/95",
+    long_break: "bg-indigo-800/95",
+    ending: "bg-gray-800/95"
   };
 
   return (
-    <div className={`fixed inset-0 bg-opacity-95 backdrop-blur-sm flex flex-col justify-center items-center z-[60] text-white p-4 transition-all duration-500 ${visible ? 'opacity-100' : 'opacity-0'} ${stateColor[pomodoroState]}`}>
+    <div className={`fixed inset-0 flex flex-col justify-center items-center z-[60] text-white p-4 transition-all duration-500 ${visible ? 'opacity-100' : 'opacity-0'} ${stateColor[pomodoroState]}`}>
       <div className="absolute top-6 right-6 flex items-center space-x-4">
         <button onClick={minimize} className="text-slate-300 hover:text-white transition-colors" title="Minimize">
             <MinimizeIcon className="w-7 h-7"/>

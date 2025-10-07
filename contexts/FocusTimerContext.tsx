@@ -123,10 +123,12 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             soundUrlToPlay = profile?.breakEndSound || DEFAULT_ALARM_URL;
         }
 
-        new Notification(
-          pomodoroState === 'focus' ? 'Sesi Fokus Selesai!' : 'Waktu Istirahat Selesai!',
-          { body: pomodoroState === 'focus' ? `Bagus! Waktunya istirahat sejenak dari "${task?.title}".` : 'Mari kembali fokus!', icon: '/icon.svg' }
-        );
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(
+              pomodoroState === 'focus' ? 'Sesi Fokus Selesai!' : 'Waktu Istirahat Selesai!',
+              { body: pomodoroState === 'focus' ? `Bagus! Waktunya istirahat sejenak dari "${task?.title}".` : 'Mari kembali fokus!', icon: '/icon.svg' }
+            );
+        }
     
         if (shouldPlaySound && soundUrlToPlay) {
             const audio = new Audio(soundUrlToPlay);
@@ -135,43 +137,48 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             });
         }
         
-        if (isSequential) {
-            if (pomodoroState === 'focus') {
-                if (focusQueue.length > 0) {
-                    setPomodoroState('short_break');
-                } else {
-                    new Notification('Sesi Fokus Selesai!', { body: `Kerja bagus! Anda telah menyelesaikan fokus pada "${task?.title}".`, icon: '/icon.svg' });
-                    stopFocusSession();
-                }
-            } else { // Break finished
-                let nextValidTask: Task | null = null;
-                let nextQueue = [...focusQueue];
-                while (nextQueue.length > 0 && !nextValidTask) {
-                    const candidate = nextQueue.shift()!;
-                    const candidateEndTime = new Date(candidate.endTime).getTime();
-                    if (new Date().getTime() < candidateEndTime) {
-                        nextValidTask = candidate;
+        // FIX: Defer subsequent state updates slightly. This gives mobile browsers a moment
+        // to process the notification and audio playback before handling the React re-render,
+        // preventing a race condition that can cause the UI to go blank.
+        setTimeout(() => {
+            if (isSequential) {
+                if (pomodoroState === 'focus') {
+                    if (focusQueue.length > 0) {
+                        setPomodoroState('short_break');
+                    } else {
+                        new Notification('Sesi Fokus Selesai!', { body: `Kerja bagus! Anda telah menyelesaikan fokus pada "${task?.title}".`, icon: '/icon.svg' });
+                        stopFocusSession();
+                    }
+                } else { // Break finished
+                    let nextValidTask: Task | null = null;
+                    let nextQueue = [...focusQueue];
+                    while (nextQueue.length > 0 && !nextValidTask) {
+                        const candidate = nextQueue.shift()!;
+                        const candidateEndTime = new Date(candidate.endTime).getTime();
+                        if (new Date().getTime() < candidateEndTime) {
+                            nextValidTask = candidate;
+                        }
+                    }
+    
+                    if (nextValidTask) {
+                        setTask(nextValidTask);
+                        setFocusQueue(nextQueue);
+                        setPomodoroState('focus');
+                    } else {
+                        new Notification('Sesi Fokus Berurutan Selesai!', { body: 'Kerja bagus! Semua tugas terjadwal telah diselesaikan.', icon: '/icon.svg' });
+                        stopFocusSession();
                     }
                 }
-
-                if (nextValidTask) {
-                    setTask(nextValidTask);
-                    setFocusQueue(nextQueue);
-                    setPomodoroState('focus');
+            } else { // Standard Pomodoro logic (less used now, but kept for potential future use)
+                if (pomodoroState === 'focus') {
+                    const newCycles = cycles + 1;
+                    setCycles(newCycles);
+                    setPomodoroState(newCycles % 4 === 0 ? 'long_break' : 'short_break');
                 } else {
-                    new Notification('Sesi Fokus Berurutan Selesai!', { body: 'Kerja bagus! Semua tugas terjadwal telah diselesaikan.', icon: '/icon.svg' });
-                    stopFocusSession();
+                    setPomodoroState('focus');
                 }
             }
-        } else { // Standard Pomodoro logic (less used now, but kept for potential future use)
-            if (pomodoroState === 'focus') {
-                const newCycles = cycles + 1;
-                setCycles(newCycles);
-                setPomodoroState(newCycles % 4 === 0 ? 'long_break' : 'short_break');
-            } else {
-                setPomodoroState('focus');
-            }
-        }
+        }, 200);
     }, [isSequential, pomodoroState, focusQueue, stopFocusSession, task, cycles, profile]);
 
     // Real-time timer loop. Recalculates remaining time from a fixed end time to prevent drift.

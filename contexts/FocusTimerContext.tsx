@@ -47,7 +47,7 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
     const intervalRef = useRef<number | null>(null);
     const lastBadgedMinute = useRef<number | null>(null);
     
-    // FIX: Refs for preloaded audio elements to prevent race conditions on mobile.
+    // Refs for preloaded audio elements to prevent race conditions on mobile.
     const focusEndAudioRef = useRef<HTMLAudioElement | null>(null);
     const breakEndAudioRef = useRef<HTMLAudioElement | null>(null);
     const lastPomodoroStateRef = useRef<PomodoroState>(pomodoroState);
@@ -97,8 +97,7 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
         }
     }, [isActive, task, timeLeft]);
     
-    // FIX: Preload audio elements based on user profile settings to ensure smooth playback
-    // and prevent browser rendering issues when the timer ends.
+    // Preload audio berdasar profile (agar cepat), nanti kita "unlock" di mobile via gesture.
     useEffect(() => {
         if (profile) {
             const focusSoundUrl = profile.focusEndSound || DEFAULT_ALARM_URL;
@@ -110,7 +109,33 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             breakEndAudioRef.current.load();
         }
     }, [profile]);
-    
+
+    // MOBILE AUDIO UNLOCK: mainkan sebentar (muted) saat ada gesture user agar play() di akhir tidak diblokir
+    useEffect(() => {
+        const unlock = () => {
+            [focusEndAudioRef.current, breakEndAudioRef.current].forEach(a => {
+                if (!a) return;
+                const wasMuted = a.muted;
+                a.muted = true;
+                a.play()
+                  .then(() => {
+                      a.pause();
+                      a.currentTime = 0;
+                      a.muted = wasMuted;
+                  })
+                  .catch(() => {
+                      // diamkan: beberapa browser memang menolak; kita tetap lanjut.
+                  });
+            });
+        };
+        window.addEventListener('touchend', unlock, { once: true, passive: true });
+        window.addEventListener('click', unlock, { once: true });
+        return () => {
+            window.removeEventListener('touchend', unlock as any);
+            window.removeEventListener('click', unlock as any);
+        };
+    }, []);
+
     // Keep a ref of the last state to know what state ended before transitioning to 'ending'
     useEffect(() => {
         lastPomodoroStateRef.current = pomodoroState;
@@ -133,44 +158,59 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
         lastBadgedMinute.current = null;
     }, []);
 
-    // FIX: Decouple timer-end side effects (audio/notification) from the subsequent
+    // Decouple timer-end side effects (audio/notification) from the subsequent
     // UI state transition by introducing an intermediate 'ending' state. This robustly
     // prevents race conditions on mobile browsers that cause the screen to go blank.
     const handleTimerEnd = useCallback(() => {
+        // hentikan loop dulu
         setIsActive(false);
         setTimerEndTime(null);
-    
-        let audioToPlay: HTMLAudioElement | null = null;
-        let shouldPlaySound = false;
-        
-        if (pomodoroState === 'focus') {
-            shouldPlaySound = profile?.playFocusEndSound !== false;
-            audioToPlay = focusEndAudioRef.current;
-        } else { // short or long break
-            shouldPlaySound = profile?.playBreakEndSound !== false;
-            audioToPlay = breakEndAudioRef.current;
-        }
 
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(
-              pomodoroState === 'focus' ? 'Sesi Fokus Selesai!' : 'Waktu Istirahat Selesai!',
-              { body: pomodoroState === 'focus' ? `Bagus! Waktunya istirahat sejenak dari "${task?.title}".` : 'Mari kembali fokus!', icon: '/icon.svg' }
-            );
-        }
-    
-        if (shouldPlaySound && audioToPlay) {
-            audioToPlay.currentTime = 0; // Rewind before playing
-            audioToPlay.play().catch(error => {
-                console.warn("Alarm sound playback was prevented by the browser:", error);
-            });
-        }
-        
-        // Transition to the intermediate 'ending' state. The logic to move to the
-        // next session is now handled in a separate useEffect hook.
+        // 1) masuk dulu ke 'ending' supaya UI settle
         setPomodoroState('ending');
-    }, [pomodoroState, profile, task?.title]);
 
-    // FIX: This new effect handles the transition *after* the timer has ended and all
+        // 2) di frame berikutnya baru bunyikan alarm & notif (mencegah white flash di HP)
+        const playSideEffects = () => {
+            let audioToPlay: HTMLAudioElement | null = null;
+            let shouldPlaySound = false;
+            if (lastPomodoroStateRef.current === 'focus') {
+                shouldPlaySound = profile?.playFocusEndSound !== false;
+                audioToPlay = focusEndAudioRef.current;
+            } else {
+                shouldPlaySound = profile?.playBreakEndSound !== false;
+                audioToPlay = breakEndAudioRef.current;
+            }
+
+            // Notifikasi dengan guard ketat
+            try {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    const title = (lastPomodoroStateRef.current === 'focus')
+                      ? 'Sesi Fokus Selesai!'
+                      : 'Waktu Istirahat Selesai!';
+                    const body = (lastPomodoroStateRef.current === 'focus')
+                      ? `Bagus! Waktunya istirahat sejenak dari "${task?.title}".`
+                      : 'Mari kembali fokus!';
+                    // delay 120ms agar tidak bentrok dengan paint transition
+                    setTimeout(() => {
+                        try {
+                            new Notification(title, { body, icon: '/icon.svg' });
+                        } catch {}
+                    }, 120);
+                }
+            } catch {}
+
+            if (shouldPlaySound && audioToPlay) {
+                audioToPlay.currentTime = 0;
+                audioToPlay.play().catch(err => {
+                    console.warn('Alarm playback blocked:', err);
+                });
+            }
+        };
+        // jalankan setelah render 'ending'
+        requestAnimationFrame(() => setTimeout(playSideEffects, 60));
+    }, [profile, task?.title]);
+
+    // This new effect handles the transition *after* the timer has ended and all
     // its side effects have been processed. It waits for a moment in the 'ending'
     // state before updating the UI for the next session, which resolves the blank
     // screen issue on mobile devices.
@@ -217,7 +257,7 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
                     setPomodoroState('focus');
                 }
             }
-        }, 2000); // A 2-second pause in the 'ending' state.
+        }, 2000); // beri jeda 2 detik sebelum transisi berikutnya
 
         return () => clearTimeout(transitionTimeout);
     }, [pomodoroState, cycles, focusQueue, isSequential, stopFocusSession, task?.title]);
@@ -282,7 +322,7 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             setIsActive(true);
              // Tampilkan notifikasi saat sesi dimulai
             if ('Notification' in window && Notification.permission === 'granted') {
-                // FIX: Menambahkan penundaan singkat sebelum menampilkan notifikasi.
+                // Menambahkan penundaan singkat sebelum menampilkan notifikasi.
                 // Ini mencegah masalah rendering (layar putih) pada beberapa browser seluler
                 // (terutama Android) di mana pembuatan notifikasi dapat mengganggu
                 // proses rendering UI layar penuh yang baru.

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback, PropsWithChildren } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, PropsWithChildren, FC } from 'react';
 import { Task, TaskStatus, Profile } from '../types';
 
 type PomodoroState = 'focus' | 'short_break' | 'long_break';
@@ -34,7 +34,7 @@ interface FocusTimerProviderProps {
     profile: Profile | null;
 }
 
-export const FocusTimerProvider: React.FC<PropsWithChildren<FocusTimerProviderProps>> = ({ children, profile }) => {
+export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> = ({ children, profile }) => {
     const [task, setTask] = useState<Task | null>(null);
     const [timeLeft, setTimeLeft] = useState(0);
     const [isActive, setIsActive] = useState(false);
@@ -233,24 +233,30 @@ export const FocusTimerProvider: React.FC<PropsWithChildren<FocusTimerProviderPr
             setIsActive(true);
              // Tampilkan notifikasi saat sesi dimulai
             if ('Notification' in window && Notification.permission === 'granted') {
-                const durationMinutes = Math.round(newDuration / 60000);
-                let title = 'Sesi Fokus Dimulai!';
-                let body = `Fokus pada: "${task.title}" selama ${durationMinutes} menit.`;
-
-                if (pomodoroState === 'short_break') {
-                    title = 'Istirahat Dimulai!';
-                    body = `Waktunya istirahat sejenak selama ${durationMinutes} menit.`;
-                } else if (pomodoroState === 'long_break') {
-                    title = 'Istirahat Panjang Dimulai!';
-                    body = `Nikmati istirahat Anda selama ${durationMinutes} menit.`;
-                }
-                
-                new Notification(title, {
-                    body,
-                    icon: '/icon.svg',
-                    silent: true, // Tidak ada suara untuk notifikasi awal
-                    tag: 'flowmind-focus-session' // Ganti notifikasi yang ada
-                });
+                // FIX: Menambahkan penundaan singkat sebelum menampilkan notifikasi.
+                // Ini mencegah masalah rendering (layar putih) pada beberapa browser seluler
+                // (terutama Android) di mana pembuatan notifikasi dapat mengganggu
+                // proses rendering UI layar penuh yang baru.
+                setTimeout(() => {
+                    const durationMinutes = Math.round(newDuration / 60000);
+                    let title = 'Sesi Fokus Dimulai!';
+                    let body = `Fokus pada: "${task.title}" selama ${durationMinutes} menit.`;
+    
+                    if (pomodoroState === 'short_break') {
+                        title = 'Istirahat Dimulai!';
+                        body = `Waktunya istirahat sejenak selama ${durationMinutes} menit.`;
+                    } else if (pomodoroState === 'long_break') {
+                        title = 'Istirahat Panjang Dimulai!';
+                        body = `Nikmati istirahat Anda selama ${durationMinutes} menit.`;
+                    }
+                    
+                    new Notification(title, {
+                        body,
+                        icon: '/icon.svg',
+                        silent: true, // Tidak ada suara untuk notifikasi awal
+                        tag: 'flowmind-focus-session' // Ganti notifikasi yang ada
+                    });
+                }, 200);
             }
         } else if (isSequential && pomodoroState === 'focus') {
             handleTimerEnd(); // Task is already over, move to the next state

@@ -46,6 +46,11 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
     const [timerEndTime, setTimerEndTime] = useState<number | null>(null);
     const intervalRef = useRef<number | null>(null);
     const lastBadgedMinute = useRef<number | null>(null);
+    
+    // FIX: Refs for preloaded audio elements to prevent race conditions on mobile.
+    const focusEndAudioRef = useRef<HTMLAudioElement | null>(null);
+    const breakEndAudioRef = useRef<HTMLAudioElement | null>(null);
+
 
     // Effect to update browser tab title
     useEffect(() => {
@@ -90,6 +95,20 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             }
         }
     }, [isActive, task, timeLeft]);
+    
+    // FIX: Preload audio elements based on user profile settings to ensure smooth playback
+    // and prevent browser rendering issues when the timer ends.
+    useEffect(() => {
+        if (profile) {
+            const focusSoundUrl = profile.focusEndSound || DEFAULT_ALARM_URL;
+            focusEndAudioRef.current = new Audio(focusSoundUrl);
+            focusEndAudioRef.current.load();
+
+            const breakSoundUrl = profile.breakEndSound || DEFAULT_ALARM_URL;
+            breakEndAudioRef.current = new Audio(breakSoundUrl);
+            breakEndAudioRef.current.load();
+        }
+    }, [profile]);
 
 
     const stopFocusSession = useCallback(() => {
@@ -112,15 +131,15 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
         setIsActive(false);
         setTimerEndTime(null);
     
-        let soundUrlToPlay: string | undefined;
+        let audioToPlay: HTMLAudioElement | null = null;
         let shouldPlaySound = false;
         
         if (pomodoroState === 'focus') {
             shouldPlaySound = profile?.playFocusEndSound !== false;
-            soundUrlToPlay = profile?.focusEndSound || DEFAULT_ALARM_URL;
+            audioToPlay = focusEndAudioRef.current;
         } else { // short or long break
             shouldPlaySound = profile?.playBreakEndSound !== false;
-            soundUrlToPlay = profile?.breakEndSound || DEFAULT_ALARM_URL;
+            audioToPlay = breakEndAudioRef.current;
         }
 
         if ('Notification' in window && Notification.permission === 'granted') {
@@ -130,16 +149,16 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
             );
         }
     
-        if (shouldPlaySound && soundUrlToPlay) {
-            const audio = new Audio(soundUrlToPlay);
-            audio.play().catch(error => {
+        if (shouldPlaySound && audioToPlay) {
+            audioToPlay.currentTime = 0; // Rewind before playing
+            audioToPlay.play().catch(error => {
                 console.warn("Alarm sound playback was prevented by the browser:", error);
             });
         }
         
-        // FIX: Defer subsequent state updates slightly. This gives mobile browsers a moment
-        // to process the notification and audio playback before handling the React re-render,
-        // preventing a race condition that can cause the UI to go blank.
+        // FIX: Defer subsequent state updates. This gives mobile browsers a moment
+        // to process the notification and preloaded audio playback before handling the 
+        // React re-render, preventing a race condition that causes the UI to go blank.
         setTimeout(() => {
             if (isSequential) {
                 if (pomodoroState === 'focus') {
@@ -178,7 +197,7 @@ export const FocusTimerProvider: FC<PropsWithChildren<FocusTimerProviderProps>> 
                     setPomodoroState('focus');
                 }
             }
-        }, 200);
+        }, 300);
     }, [isSequential, pomodoroState, focusQueue, stopFocusSession, task, cycles, profile]);
 
     // Real-time timer loop. Recalculates remaining time from a fixed end time to prevent drift.
